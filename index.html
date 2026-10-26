@@ -1315,7 +1315,7 @@ document.querySelectorAll('button').forEach(b=>b.addEventListener('mouseup',()=>
 
 
 /* ================= MULTIPLAYER ================= */
-const RELAY_URL='';
+const RELAY_URL='wss://apex-rider-relay.racinggame.workers.dev';
 const PCOL=[0xff5a1f,0x2f9bff,0x3ddc84,0xffd23f,0xd35bff];
 const hex6=c=>'#'+c.toString(16).padStart(6,'0');
 const MP={ws:null,id:null,host:null,phase:'idle',players:[],cfg:{stage:0},offset:0,bestRtt:1e9,rtt:0,go:false,startAt:0,remotes:new Map(),room:'',sendT:0,fins:[],finMap:{},prevMode:'challenge',name:'',pid:'',tries:0,pingIv:0,boardT:0,createTries:0};

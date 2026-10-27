@@ -9,3 +9,4 @@ test*.html
 CLAUDE.md
 project.yaml
 project.local.yaml
+production/

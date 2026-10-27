@@ -695,7 +695,7 @@ function buildWorld(st){
   const fRoad=modFn(st.id,'roadTexture');let rt=fRoad?fRoad(st,stageKit()):null;
   if(rt&&rt.isTexture){rt.wrapS=rt.wrapT=THREE.RepeatWrapping;rt.anisotropy=8;}else rt=roadTexture(st);
   const texLen=(mx&&typeof mx.texLen==='number'&&mx.texLen>2)?mx.texLen:st.texLen;const tl=L/Math.round(L/texLen);
-  const road=ribbon(-st.half,st.half,.03,.03,new THREE.MeshLambertMaterial({map:rt}),false,null,tl);
+  const road=ribbon(-st.half,st.half,.03,.03,new THREE.MeshLambertMaterial({map:rt}),false,tl);
   road.material.polygonOffset=true;road.material.polygonOffsetFactor=-1;road.material.polygonOffsetUnits=-1;grp.add(road);
   // lights & fog
   scene=new THREE.Scene();scene.add(grp);

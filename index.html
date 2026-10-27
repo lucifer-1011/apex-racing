@@ -1586,7 +1586,9 @@ function showLobby(on){$('lobby').classList.toggle('on',on);if(on)$('menu').clas
 function lobbyView(room){$('lobConnect').hidden=room;$('lobRoom').hidden=!room;$('lobLeave').textContent=room?'Leave room':'Back';}
 function newCode(){const a='ABCDEFGHJKLMNPQRSTUVWXYZ',r=new Uint32Array(5);crypto.getRandomValues(r);let c='';for(let i=0;i<5;i++)c+=a[r[i]%a.length];return c;}
 function mpClose(){const w=MP.ws;MP.ws=null;clearInterval(MP.pingIv);if(w){try{w.close();}catch(e){}}}
-function mpLeave(){setTok(MP.room,'');MP.phase='left';mpClose();MP.players=[];MP.remotes.clear();MP.go=false;}
+function mpLeave(){MP.resume=false;setTok(MP.room,'');try{sessionStorage.removeItem('apexRider.room');}catch(e){}MP.phase='left';mpClose();MP.players=[];MP.remotes.clear();MP.go=false;}
+const mpInRoom=()=>!!MP.room&&MP.phase!=='left'&&MP.phase!=='refused'&&(S.mode==='multi'||!$('lobRoom').hidden);
+function mpResume(){if(!MP.ws&&mpInRoom()){MP.resume=true;mpConnect('join',MP.room);}}
 function mpConnect(mode,code){
   if(!RELAY_URL){lobStatus('Multiplayer server is not set up yet.');return;}
   mpClose();MP.room=code;MP.phase='connecting';MP.bestRtt=1e9;lobStatus('Connecting…');
@@ -1597,19 +1599,19 @@ function mpConnect(mode,code){
   ws.onmessage=ev=>{let m;try{m=JSON.parse(ev.data);}catch(e){return;}mpOn(m);};
   ws.onclose=()=>{if(MP.ws!==ws)return;MP.ws=null;clearInterval(MP.pingIv);
     if(MP.phase==='refused'||MP.phase==='left')return;
-    if(MP.phase==='connecting'){lobStatus('Could not reach the game server. Try again.');return;}
-    if(S.mode==='multi'&&MP.tries<6){MP.tries++;toast('Connection lost — reconnecting…','warn');setTimeout(()=>{if(S.mode==='multi'&&!MP.ws)mpConnect('join',MP.room);},1000);}
-    else{lobbyView(false);lobStatus('Disconnected from the room.');MP.phase='left';}};
+    if(MP.phase==='connecting'&&!MP.resume){lobStatus('Could not reach the game server. Try again.');return;}
+    if(mpInRoom()&&MP.tries<8){MP.tries++;if(S.mode==='multi')toast('Connection lost — reconnecting…','warn');else lobStatus('Connection lost — reconnecting…');setTimeout(()=>mpResume(),Math.min(4000,600*MP.tries));}
+    else{MP.resume=false;lobbyView(false);lobStatus('Disconnected from the room.');MP.phase='left';}};
 }
 function mpOn(m){
   switch(m.t){
    case 'pong':{const rtt=performance.now()-m.c;MP.rtt=rtt;if(rtt<=MP.bestRtt){MP.bestRtt=rtt;MP.offset=m.s+rtt/2-Date.now();}renderLobby();break;}
-   case 'welcome':MP.id=m.id;if(typeof m.tok==='string')setTok(MP.room,m.tok);MP.tries=0;MP.phase=m.phase;applyPlayers(m);if(S.mode!=='multi'){lobbyView(true);showLobby(true);}renderLobby();break;
+   case 'welcome':MP.resume=false;MP.recreated=false;MP.id=m.id;try{sessionStorage.setItem('apexRider.room',MP.room+(MP.hosting?':H':''));}catch(e){}if(typeof m.tok==='string')setTok(MP.room,m.tok);MP.tries=0;MP.phase=m.phase;applyPlayers(m);if(S.mode!=='multi'){lobbyView(true);showLobby(true);}renderLobby();break;
    case 'players':applyPlayers(m);renderLobby();break;
-   case 'noroom':MP.phase='refused';lobStatus('Room not found. Check the code with your friend.');break;
-   case 'busy':MP.phase='refused';lobStatus('That race has already started. Try again when it ends.');break;
-   case 'full':MP.phase='refused';lobStatus('That room is full (5 players max).');break;
-   case 'exists':if(MP.createTries++<4)mpConnect('create',newCode());else lobStatus('Could not create a room. Try again.');break;
+   case 'noroom':if(MP.resume&&MP.hosting&&!MP.recreated){MP.recreated=true;mpConnect('create',MP.room);break;}MP.resume=false;MP.phase='refused';try{sessionStorage.removeItem('apexRider.room');}catch(e){}lobStatus('Room not found. Check the code with your friend.');break;
+   case 'busy':MP.resume=false;MP.phase='refused';lobStatus('That race has already started. Try again when it ends.');break;
+   case 'full':MP.resume=false;MP.phase='refused';lobStatus('That room is full (5 players max).');break;
+   case 'exists':if(MP.resume){mpConnect('join',MP.room);break;}if(MP.createTries++<4)mpConnect('create',newCode());else lobStatus('Could not create a room. Try again.');break;
    case 'prep':
      if(S.mode!=='multi')MP.prevMode=S.mode;
      S.mode='multi';S.stage=m.stage;MP.players=m.players;MP.phase='loading';MP.go=false;$('rAgain').textContent='BACK TO LOBBY';startGame();break;
@@ -1695,13 +1697,13 @@ function mpFillResult(row){
 function mpBackToLobby(){quitToMenu(true);lobbyView(true);showLobby(true);renderLobby();}
 function mpOpen(){
   $('mpName').value=MP.name;showLobby(true);
-  if(MP.ws&&MP.phase!=='left'&&MP.phase!=='refused'&&MP.room){lobbyView(true);renderLobby();}
+  if((MP.ws||MP.resume)&&MP.phase!=='left'&&MP.phase!=='refused'&&MP.room){lobbyView(true);renderLobby();}
   else{lobbyView(false);lobStatus(RELAY_URL?'':'Multiplayer server is not set up yet.');}
 }
 function mpNameOk(){const v=$('mpName').value.trim().slice(0,14);if(!v){lobStatus('Enter your name first.');$('mpName').focus();return false;}MP.name=v;try{localStorage.setItem('apexRider.name',v);}catch(e){}return true;}
 $('mpBtn').onclick=mpOpen;
-$('mpCreate').onclick=()=>{if(!mpNameOk())return;Snd.init();MP.createTries=0;mpConnect('create',newCode());};
-$('mpJoin').onclick=()=>{if(!mpNameOk())return;const c=$('mpCode').value.trim().toUpperCase();if(c.length<3){lobStatus('Enter the room code.');return;}Snd.init();mpConnect('join',c);};
+$('mpCreate').onclick=()=>{if(!mpNameOk())return;Snd.init();MP.createTries=0;MP.hosting=true;mpConnect('create',newCode());};
+$('mpJoin').onclick=()=>{if(!mpNameOk())return;const c=$('mpCode').value.trim().toUpperCase();if(c.length<3){lobStatus('Enter the room code.');return;}Snd.init();MP.hosting=false;mpConnect('join',c);};
 $('lobReady').onclick=()=>{const me=MP.players.find(q=>q.id===MP.id);mpSend({t:'ready',v:!(me&&me.ready)});};
 $('lobStart').onclick=()=>mpSend({t:'start'});
 $('lobLeave').onclick=()=>{if(!$('lobRoom').hidden){mpLeave();lobbyView(false);lobStatus('');}else showLobby(false);};
@@ -1709,6 +1711,11 @@ $('rcCopy').onclick=()=>{const url=location.origin+location.pathname+'?room='+MP
   try{navigator.clipboard.writeText(url).then(done,()=>{lobStatus(url);});}catch(e){lobStatus(url);}};
 $('mpCode').addEventListener('keydown',e=>{if(e.key==='Enter')$('mpJoin').click();});
 $('mpName').addEventListener('keydown',e=>{if(e.key==='Enter')$('mpCreate').click();});
+document.addEventListener('visibilitychange',()=>{if(document.hidden||!mpInRoom())return;
+  if(MP.ws&&MP.ws.readyState===1){mpSend({t:'ping',c:performance.now()});return;}
+  if(!MP.ws||MP.ws.readyState>1){MP.tries=0;mpClose();mpResume();}});
+{let saved='';try{saved=sessionStorage.getItem('apexRider.room')||'';}catch(e){}
+ if(/^[A-Za-z0-9]{3,6}(:H)?$/.test(saved)&&!/[?&]room=/.test(location.search)&&MP.name&&RELAY_URL){setTimeout(()=>{mpOpen();lobbyView(true);MP.hosting=saved.endsWith(':H');MP.resume=true;lobStatus('Reconnecting…');mpConnect('join',saved.split(':')[0]);},50);}}
 {const m=/[?&]room=([A-Za-z0-9]{3,6})/.exec(location.search);if(m){setTimeout(()=>{mpOpen();$('mpCode').value=m[1].toUpperCase();if(MP.name&&RELAY_URL)$('mpJoin').click();},50);}}
 
 /* ================= MAIN LOOP ================= */

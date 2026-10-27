@@ -526,7 +526,7 @@ function makeObstacle(kind,rng){
 /* ================= TRACK DATA ================= */
 let ST=null,X,Y,Z,HD,K,M=0,DS=3,L=0,CS=75,bkt,bKX,bKZ,bMinX,bMinZ,meanY=0;
 let TH,tnx,tnz,tc,tMinX,tMinZ;
-let TR=[],worldGroup=null,worldExtras={};
+let TR=[],worldGroup=null,worldExtras={},GANTRY=[];
 const polarR=(st,th)=>{let r=1;for(const h of st.harm)r+=h[1]*Math.sin(h[0]*th+h[2]);return st.R*r;};
 const elevAt=(st,th)=>{let y=st.elevBase;for(const e of st.elev)y+=e[1]*Math.sin(e[0]*th+e[2]);return y;};
 function offroadBump(s){
@@ -670,7 +670,7 @@ function signTexture(txt,bg){const cv=document.createElement('canvas');cv.width=
 function makeEnv(st){const es=new THREE.Scene();es.add(skyMesh(st,50));const pm=new THREE.PMREMGenerator(renderer);const t=pm.fromScene(es).texture;pm.dispose();return t;}
 let sunLight,spot,sky;
 function buildWorld(st){
-  ST=st;const bb=buildTrack(st);const rng=mulberry(st.seed);
+  ST=st;GANTRY=[];const bb=buildTrack(st);const rng=mulberry(st.seed);
   const grp=new THREE.Group();
   const T=buildTerrain(st,bb);grp.add(T.mesh);
   // road
@@ -708,12 +708,19 @@ function buildWorld(st){
     const poles=[],arms=[];for(let j=0;j<M;j+=8){for(const sd of[-1,1]){const p=pose(j*DS,sd*(st.half+1.7));poles.push({x:p.x,y:p.y,z:p.z,sx:1});arms.push({x:p.x,y:p.y+8.6,z:p.z,sx:1,ry:p.hd+(sd>0?PI/2:-PI/2)});}}
     grp.add(inst(geo('CylinderGeometry',.1,.14,9,6).clone().translate(0,4.5,0),new THREE.MeshLambertMaterial({color:0x777c82}),poles));
     grp.add(inst(geo('BoxGeometry',.12,.1,2.8).clone().translate(0,0,1.3),new THREE.MeshLambertMaterial({color:0x777c82}),arms));
-    // gantries
-    [.1,.35,.6,.85].forEach((f,i)=>{const p=pose(f*L,0);const g=new THREE.Group();const mt=new THREE.MeshLambertMaterial({color:0x6c7178});
-      for(const sd of[-1,1]){const q=pose(f*L,sd*(st.half+1.2));const c=cyl(g,mt,.25,.25,8.5,[sd*(st.half+1.2),4.2,0]);}
-      box(g,mt,st.half*2+2.6,.7,.5,[0,8.3,0]);
-      const sg=box(g,new THREE.MeshBasicMaterial({map:signTexture(['NEXT EXIT 12','AIRPORT →','CITY CENTRE','RIVERSIDE'][i],'#0a6b3c')}),9,2.6,.15,[0,6.7,.1]);
-      g.position.set(p.x,p.y,p.z);g.rotation.y=p.hd;grp.add(g);});
+    // overhead info billboards (gantries): both posts at the road edges, sign centred over the road
+    GANTRY=[];
+    [.1,.35,.6,.85].forEach(f=>{
+      const p=pose(f*L,0),px=p.x,py=p.y,pz=p.z,ph=p.hd; // copy now: pose() returns one shared object
+      const g=new THREE.Group(),mt=new THREE.MeshLambertMaterial({color:0x6c7178}),px2=st.half+1.2;
+      for(const sd of[-1,1]){cyl(g,mt,.25,.3,8.6,[sd*px2,4.25,0]);box(g,mt,.9,.3,.9,[sd*px2,.15,0]);}
+      box(g,mt,st.half*2+2.9,.6,.5,[0,8.5,0]);
+      const cv=document.createElement('canvas');cv.width=1024;cv.height=256;const tex=new THREE.CanvasTexture(cv);tex.anisotropy=4;
+      box(g,new THREE.MeshBasicMaterial({map:tex}),10.4,2.6,.16,[0,6.55,0]);
+      for(const sx of[-3.6,3.6])cyl(g,mt,.06,.06,.7,[sx,7.85,0]);
+      g.position.set(px,py,pz);g.rotation.y=ph;grp.add(g);
+      GANTRY.push({cv,tex,s:f*L,last:''});
+    });
     // city skyline
     const bl=[];for(let i=0;i<150;i++){const a=rng()*TAU,r=Math.sqrt(rng())*260;bl.push({x:Math.cos(a)*r,z:Math.sin(a)*r,y:-5,sx:18+rng()*30,sz:18+rng()*30,sy:30+Math.pow(rng(),2.2)*190,c:[0x7f8da3,0x99a6b8,0x6b778a,0xa9b4c4][(rng()*4)|0]});}
     const cv=document.createElement('canvas');cv.width=64;cv.height=128;const g2=cv.getContext('2d');g2.fillStyle='#fff';g2.fillRect(0,0,64,128);for(let y=0;y<16;y++)for(let x=0;x<8;x++){g2.fillStyle=rng()<.5?'#cfe2f5':'#7d8fa6';g2.fillRect(x*8+1,y*8+2,5,4);}
@@ -759,7 +766,7 @@ function buildWorld(st){
   worldGroup=grp;updateTraffic(0);
   return{waterY:T.waterY};
 }
-function disposeWorld(){if(!worldGroup)return;worldGroup.traverse(o=>{if(o.geometry&&!Object.values(_g).includes(o.geometry))o.geometry.dispose();});worldGroup=null;TR=[];}
+function disposeWorld(){GANTRY=[];if(!worldGroup)return;worldGroup.traverse(o=>{if(o.geometry&&!Object.values(_g).includes(o.geometry))o.geometry.dispose();});worldGroup=null;TR=[];}
 function updateTraffic(t){
   for(const v of TR){const s=v.fixed?v.s0:mod(v.s0+v.dir*v.speed*t,L);v.s=s;const p=pose(s,v.off);v.obj.position.set(p.x,p.y,p.z);v.obj.rotation.y=v.fixed?p.hd+(v.yaw||0):p.hd+(v.dir<0?PI:0);v.hd=v.obj.rotation.y;}
 }
@@ -1051,6 +1058,7 @@ function resetRun(){
   if(S.mode==='ghost')buildGhost();
   if(S.mode==='multi')mpSetupRace();
   scene.add(particles);
+  for(const G of GANTRY)G.last='';updateGantries(performance.now(),true);
   Pl.bike.root.visible=true;
   updateTraffic(0);
   $('result').classList.remove('on');$('pause').classList.remove('on');$('board').innerHTML='';$('mpMsg').textContent=S.mode==='multi'?'Waiting for other players…':'';
@@ -1332,6 +1340,39 @@ function updateHUD(){
   const nowT=performance.now();if(nowT-(updateHUD.t||0)>33){updateHUD.t=nowT;drawGauge();drawMini();}
 }
 
+/* ================= OVERHEAD BILLBOARDS ================= */
+function signData(){
+  if(S.mode==='roam')return{l1:'FREE ROAM',v1:(Pl.odo/1000).toFixed(1)+' km',l2:'RIDDEN',v2:'\u221e',c2:'NO FINISH LINE'};
+  const total=ST.laps*L,prog=Math.max(0,Pl.prog),left=Math.max(0,total-prog);
+  const lap=Math.min(ST.laps,Math.floor(prog/L)+1),togo=ST.laps-lap;
+  let rank='';
+  if(S.mode==='multi'){const l=mpStandings(),i=l.findIndex(q=>q.me);rank=' \u00b7 P'+(i+1)+'/'+l.length;}
+  else if(S.mode==='challenge'&&AI)rank=' \u00b7 P'+(prog>=AI.P?1:2)+'/2';
+  if(Pl.finished||left<=0)return{l1:'TO FINISH',v1:'FINISH!',l2:'LAP',v2:ST.laps+' / '+ST.laps,c2:'RACE COMPLETE'+rank};
+  const dist=left>=1000?(left/1000).toFixed(1)+' km':Math.round(left/10)*10+' m';
+  return{l1:'TO FINISH',v1:dist,l2:'LAP',v2:lap+' / '+ST.laps,c2:(togo===0?'FINAL LAP':togo+(togo===1?' LAP TO GO':' LAPS TO GO'))+rank};
+}
+function drawSign(G,d){
+  const key=d.l1+d.v1+d.v2+d.c2;if(G.last===key)return;G.last=key;
+  const g=G.cv.getContext('2d'),W=1024,H=256;
+  g.fillStyle='#0a6b3c';g.fillRect(0,0,W,H);
+  g.strokeStyle='#fff';g.lineWidth=8;rr(g,10,10,W-20,H-20,24);g.stroke();
+  g.fillStyle='#fff';g.textAlign='left';g.textBaseline='alphabetic';
+  g.font='700 40px Rajdhani,Arial,sans-serif';g.fillText(d.l1,54,72);
+  g.font='700 130px Rajdhani,Arial,sans-serif';g.fillText(d.v1,50,190);
+  g.fillStyle='rgba(255,255,255,.55)';g.fillRect(560,50,4,H-100);
+  g.fillStyle='#fff';g.font='700 40px Rajdhani,Arial,sans-serif';g.fillText(d.l2,612,72);
+  g.font='700 110px Rajdhani,Arial,sans-serif';g.fillText(d.v2,606,176);
+  g.fillStyle='#ffd23f';g.font='700 36px Rajdhani,Arial,sans-serif';g.fillText(d.c2,610,226);
+  G.tex.needsUpdate=true;
+}
+function updateGantries(now,force){
+  if(!GANTRY.length||!Pl.spec)return;
+  if(!force&&now-(updateGantries.t||0)<400)return;updateGantries.t=now;
+  const d=signData();
+  for(const G of GANTRY){const dist=mod(G.s-Pl.lastS+L/2,L)-L/2;if(force||Math.abs(dist)<450)drawSign(G,d);}
+}
+
 /* ================= MENU ================= */
 const menuBikes={};let menuBike=null,menuT=0,menuBg=new THREE.Color(0x222222);
 menuScene.add(new THREE.HemisphereLight(0xffffff,0x334455,.9));
@@ -1524,6 +1565,7 @@ function frame(now){
     Snd.update(Pl,Pl.spec,true);
     if(Pl.light&&(Math.floor(performance.now()/350)!==Pl.tickN)&&(Pl.indL||Pl.indR||Pl.haz)){Pl.tickN=Math.floor(performance.now()/350);Snd.tick();}
     if(S.mode==='multi'){mpUpdateRemotes(dt);mpSendPose(now);}
+    updateGantries(now);
     updateCamera(dt);
     updateHUD();
   }

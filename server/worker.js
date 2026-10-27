@@ -11,6 +11,7 @@ const STAGE_TOTAL = [8925, 6273, 5343, 4739];
 const STAGE_MIN_TIME = [85, 100, 100, 63];
 const MAX_SPEED = 130;           // m/s: hard ceiling on reported progress growth
 const FIN_STRAGGLER_MS = 120000; // after the first finisher, others get 2 minutes
+const LOBBY_GRACE_MS = 45000;    // a dropped lobby player keeps their slot (and host role) this long so a phone app switch is harmless
 const IDLE_MS = 45000;           // clients ping every 4 s; silence this long means dead
 
 const ORIGIN_OK = /^(https:\/\/apex-racing[a-z0-9-]*\.vercel\.app|http:\/\/localhost(:\d+)?|http:\/\/127\.0\.0\.1(:\d+)?)$/;
@@ -133,6 +134,7 @@ export class Room {
     if (p) { // reconnect with the player's own secret token
       if (p.connected) { try { p.ws.close(1000, 'replaced'); } catch (e) { /* closed */ } }
       p.ws = ws; p.connected = true;
+      clearTimeout(p.graceT);
     } else {
       if (mode === 'join' && this.connectedCount() === 0) return this.refuse(ws, 'noroom');
       if (mode === 'create' && this.connectedCount() > 0) return this.refuse(ws, 'exists');
@@ -151,7 +153,8 @@ export class Room {
       this.tokens.set(token, id);
     }
     p.seen = Date.now();
-    if (!this.hostId || !this.players.get(this.hostId) || !this.players.get(this.hostId).connected) this.hostId = p.id;
+    const hp = this.hostId ? this.players.get(this.hostId) : null;
+    if (!hp || (!hp.connected && this.phase !== 'lobby')) this.hostId = p.id;
 
     // the secret token goes only to this socket, never into rosters
     this.send(ws, { t: 'welcome', id: p.id, tok: p.tok, host: this.hostId, cfg: this.cfg, phase: this.phase, players: this.roster() });
@@ -252,6 +255,10 @@ export class Room {
     this.phase = 'loading';
     this.loaded = new Set();
     this.finCount = 0;
+    // players still inside their reconnect grace period miss this race
+    for (const [id, q] of [...this.players]) {
+      if (!q.connected) { clearTimeout(q.graceT); this.players.delete(id); this.tokens.delete(q.tok); }
+    }
     for (const q of this.players.values()) { q.fin = null; q.prog = 0; q.progAt = 0; }
     this.broadcast({ t: 'prep', stage: this.cfg.stage, players: this.roster() });
     this.pushPlayers();
@@ -289,10 +296,31 @@ export class Room {
     this.pushPlayers();
   }
 
+  // lobby only: the grace period ran out without the player coming back
+  dropFromLobby(p) {
+    if (this.players.get(p.id) !== p || p.connected || this.phase !== 'lobby') return;
+    this.players.delete(p.id); this.tokens.delete(p.tok);
+    if (this.connectedCount() === 0) {
+      clearTimeout(this.timer); clearTimeout(this.endTimer); clearInterval(this.idle); this.idle = null;
+      this.reset();
+      return;
+    }
+    if (this.hostId === p.id) {
+      const next = [...this.players.values()].find(q => q.connected);
+      this.hostId = next ? next.id : null;
+    }
+    this.pushPlayers();
+  }
+
   onClose(p, ws) {
     if (p.ws !== ws || !p.connected) return;
     p.connected = false;
-    if (this.phase === 'lobby') { this.players.delete(p.id); this.tokens.delete(p.tok); }
+    if (this.phase === 'lobby') {
+      clearTimeout(p.graceT);
+      p.graceT = setTimeout(() => this.dropFromLobby(p), LOBBY_GRACE_MS);
+      this.pushPlayers();
+      return;
+    }
     if (this.connectedCount() === 0) {
       clearTimeout(this.timer); clearTimeout(this.endTimer); clearInterval(this.idle);
       this.reset();

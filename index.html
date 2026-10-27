@@ -1600,7 +1600,7 @@ function mpConnect(mode,code){
   ws.onclose=()=>{if(MP.ws!==ws)return;MP.ws=null;clearInterval(MP.pingIv);
     if(MP.phase==='refused'||MP.phase==='left')return;
     if(MP.phase==='connecting'&&!MP.resume){lobStatus('Could not reach the game server. Try again.');return;}
-    if(mpInRoom()&&MP.tries<8){MP.tries++;if(S.mode==='multi')toast('Connection lost — reconnecting…','warn');else lobStatus('Connection lost — reconnecting…');setTimeout(()=>mpResume(),Math.min(4000,600*MP.tries));}
+    if(mpInRoom()&&MP.tries<12){MP.tries++;if(S.mode==='multi')toast('Connection lost — reconnecting…','warn');else lobStatus('Connection lost — reconnecting…');setTimeout(()=>mpResume(),Math.min(4000,600*MP.tries));}
     else{MP.resume=false;lobbyView(false);lobStatus('Disconnected from the room.');MP.phase='left';}};
 }
 function mpOn(m){

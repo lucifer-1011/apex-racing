@@ -173,6 +173,27 @@ body.touch #board div{font-size:12px;padding:1px 6px}
 .lp-set #optRow .seg{flex-wrap:nowrap}
 .lp-set .seg button{padding:7px 12px;white-space:nowrap}
 .lp-set .cta{margin-top:2px;padding:14px;font-size:24px;box-shadow:0 8px 28px -8px rgba(255,90,31,.7)}
+.lp-eye{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600;letter-spacing:.32em;text-transform:uppercase;color:var(--accent2);text-shadow:0 1px 8px #000}
+.lp-eye i{width:34px;height:3px;border-radius:2px;background:linear-gradient(90deg,var(--accent),transparent)}
+.lp-h{transform:skewX(-6deg);transform-origin:left bottom;font-size:clamp(38px,5.4vw,72px)}
+.lp-set{position:relative;gap:14px;padding:18px 18px 16px 20px;background:linear-gradient(160deg,rgba(18,22,32,.78),rgba(8,10,15,.7));border-color:rgba(255,255,255,.14);box-shadow:0 18px 50px -20px #000}
+.lp-set::before{content:"";position:absolute;left:0;top:14px;bottom:14px;width:3px;border-radius:0 3px 3px 0;background:linear-gradient(180deg,var(--accent),var(--accent2))}
+.lp-set .opt label{display:flex;align-items:center;gap:8px;font-size:11.5px;letter-spacing:.2em;margin-bottom:7px}
+.lp-set .opt label b{font-weight:700;color:var(--accent);letter-spacing:.08em}
+.lp-set .seg{gap:0;padding:3px;border-radius:11px;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.1)}
+.lp-set .seg button{border:0;border-radius:8px;background:transparent;color:#aeb7c8;transition:background .18s,color .18s,box-shadow .18s}
+.lp-set .seg button:hover{color:#fff;background:rgba(255,255,255,.07)}
+.lp-set .seg button.sel{background:var(--accent);color:#190700;box-shadow:0 4px 14px -4px rgba(255,90,31,.8)}
+.lp-set #optRow{gap:14px 18px}
+.lp-set #optRow .opt{flex:1 1 200px}
+.lp-set .cta{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;gap:12px;border-radius:12px;background:linear-gradient(100deg,#ff7a2e,var(--accent) 55%,#e8400f)}
+.lp-set .cta::after{content:"";width:14px;height:14px;border-top:4px solid currentColor;border-right:4px solid currentColor;transform:rotate(45deg) skew(8deg,8deg);transition:transform .2s}
+.lp-set .cta::before{content:"";position:absolute;top:0;bottom:0;left:-40%;width:30%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.4),transparent);transform:skewX(-20deg);animation:lpShine 3.4s ease-in-out infinite}
+.lp-set .cta:hover::after{transform:translateX(5px) rotate(45deg) skew(8deg,8deg)}
+.lp-set details{border-top:1px solid rgba(255,255,255,.1);padding-top:10px}
+.lp-set summary{cursor:pointer;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.lp-set summary:hover{color:#fff}
+@keyframes lpShine{0%,60%{left:-40%}100%{left:130%}}
 .lp-right{display:flex;min-width:0}
 .lp-right .minfo{flex:1;justify-content:flex-end;align-items:flex-end}
 .lp-maps{padding:10px max(24px,env(safe-area-inset-right,0px)) max(18px,env(safe-area-inset-bottom,0px)) max(24px,env(safe-area-inset-left,0px))}
@@ -203,12 +224,12 @@ body.touch #board div{font-size:12px;padding:1px 6px}
 @media(max-height:520px) and (min-width:560px){
   .lp-top{padding-top:max(6px,env(safe-area-inset-top,0px));padding-bottom:2px}
   .lp-top .brand{font-size:22px}.lp-mp{padding:3px 12px;font-size:13px}.lp-mp span{display:none}
-  .lp-h,.lp-p{display:none}
+  .lp-h,.lp-p,.lp-eye{display:none}
   .lp-main{grid-template-columns:minmax(250px,390px) 1fr;gap:14px;padding-top:2px;padding-bottom:2px}
   .lp-right{display:flex}.lp-right .mdesc{display:none}.lp-right .minfo .bn{font-size:26px}.lp-right .stat{display:none}
   .lp-set{padding:8px 10px;gap:6px;border-radius:12px}
   #menu .lp-set .cta{position:static;box-shadow:0 6px 18px -6px rgba(255,90,31,.7);padding:8px;font-size:18px;margin-top:0}
-  .lp-set .seg button{padding:5px 9px;font-size:14px}
+  .lp-set .seg button{padding:5px 9px;font-size:14px}.lp-set .opt label{margin-bottom:3px}.lp-set::before{top:8px;bottom:8px}
   .lp-set details{display:none}
   .lp-maps{padding-top:4px;padding-bottom:max(8px,env(safe-area-inset-bottom,0px))}
   #stageList.lp-cards{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
@@ -217,13 +238,13 @@ body.touch #board div{font-size:12px;padding:1px 6px}
   .mc-b em,.mc-bike{display:none}.mc-b{padding:6px 8px}.mc-b strong{font-size:15px}.mc-f{font-size:10px}.mc-n{font-size:11px;top:6px;left:6px;padding:1px 6px}
 }
 @media(max-width:900px) and (orientation:portrait){
-  .lp-h{font-size:40px}
+  .lp-h{font-size:42px}.lp-eye{font-size:11px;letter-spacing:.26em}.lp-set{padding:14px 14px 12px 16px}
   .lp-top{gap:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}.lp-top .brand{font-size:24px}.lp-mp{padding:5px 12px;font-size:13px}.lp-mp span{font-size:9px}
   .lp-main,.lp-maps{padding-left:16px;padding-right:16px}
   .lp-set .seg button{padding:7px 10px}
   .mc-b em{display:none}.mc-bike{font-size:10px}
 }
-@media(prefers-reduced-motion:reduce){.mapc,.mapc img{transition:none;animation:none}}
+@media(prefers-reduced-motion:reduce){.mapc,.mapc img{transition:none;animation:none}.lp-set .cta::before{animation:none;display:none}}
 </style>
 
 <canvas id="c"></canvas>
@@ -236,13 +257,14 @@ body.touch #board div{font-size:12px;padding:1px 6px}
   </header>
   <main class="lp-main">
     <section class="lp-left">
+      <div class="lp-eye"><i></i>Race setup</div>
       <h1 class="lp-h">Pick your <em>road.</em></h1>
       <p class="lp-p">Four maps, four bikes. Race a rival, beat your own ghost, or just ride.</p>
       <div class="lp-set">
-        <div class="opt"><label>Mode</label><div class="seg" id="modeSeg"></div></div>
+        <div class="opt"><label><b>01</b>Mode</label><div class="seg" id="modeSeg"></div></div>
         <div id="optRow">
-          <div class="opt" id="diffOpt"><label>Rival skill</label><div class="seg" id="diffSeg"></div></div>
-          <div class="opt"><label>Transmission</label><div class="seg" id="transSeg"></div></div>
+          <div class="opt" id="diffOpt"><label><b>02</b>Rival skill</label><div class="seg" id="diffSeg"></div></div>
+          <div class="opt"><label><b>03</b>Transmission</label><div class="seg" id="transSeg"></div></div>
         </div>
         <button id="startBtn" class="cta">START RIDE</button>
         <details><summary>Controls and input</summary><div class="opt" style="margin-top:8px"><label>Control type</label><div class="seg" id="ctlSeg"></div></div><div class="ctrl" id="ctrlGrid"></div></details>

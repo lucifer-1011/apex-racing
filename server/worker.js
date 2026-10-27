@@ -1,13 +1,40 @@
 // Apex Rider multiplayer relay: one Durable Object per room code.
-// Clients connect to wss://<worker>/ws/<CODE>?mode=create|join&name=..&pid=..
+// Clients connect to wss://<worker>/ws/<CODE>?mode=create|join&name=..[&tok=..]
+//
+// Trust model: physics runs on each client, so results are casual. The relay does
+// plausibility checks (see validate* below) so a modified client cannot trivially
+// teleport, flood, impersonate other players or fake a finish time.
 const MAX_PLAYERS = 5;
 const STAGES = 4;
+// Race distance in metres per stage (laps x track length) and the fastest plausible finish in seconds.
+const STAGE_TOTAL = [8925, 6273, 5343, 4739];
+const STAGE_MIN_TIME = [85, 100, 100, 63];
+const MAX_SPEED = 130;           // m/s: hard ceiling on reported progress growth
+const FIN_STRAGGLER_MS = 120000; // after the first finisher, others get 2 minutes
+const IDLE_MS = 45000;           // clients ping every 4 s; silence this long means dead
+
+const ORIGIN_OK = /^(https:\/\/apex-racing[a-z0-9-]*\.vercel\.app|http:\/\/localhost(:\d+)?|http:\/\/127\.0\.0\.1(:\d+)?)$/;
+
+// Best-effort per-isolate limiter for new connections per IP.
+const hits = new Map();
+function tooMany(ip) {
+  const now = Date.now();
+  const h = hits.get(ip) || { n: 0, t: now };
+  if (now - h.t > 60000) { h.n = 0; h.t = now; }
+  h.n++;
+  hits.set(ip, h);
+  if (hits.size > 5000) hits.clear();
+  return h.n > 40;
+}
 
 export default {
   async fetch(req, env) {
     const url = new URL(req.url);
-    const m = url.pathname.match(/^\/ws\/([A-Za-z0-9]{3,8})$/);
+    const m = url.pathname.match(/^\/ws\/([A-Za-z]{4,6})$/);
     if (m) {
+      const origin = req.headers.get('Origin') || '';
+      if (!ORIGIN_OK.test(origin)) return new Response('Forbidden', { status: 403 });
+      if (tooMany(req.headers.get('CF-Connecting-IP') || 'local')) return new Response('Slow down', { status: 429 });
       const stub = env.ROOM.get(env.ROOM.idFromName(m[1].toUpperCase()));
       return stub.fetch(req);
     }
@@ -15,19 +42,45 @@ export default {
   },
 };
 
+const isNum = v => typeof v === 'number' && Number.isFinite(v);
+const secret = () => crypto.randomUUID().replace(/-/g, '');
+const shortId = () => crypto.randomUUID().replace(/-/g, '').slice(0, 8);
+
+function cleanName(raw, taken) {
+  let n = String(raw || '').normalize('NFKC').replace(/[^\p{L}\p{N} _.\-]/gu, '').replace(/\s+/g, ' ').trim().slice(0, 14) || 'Rider';
+  const base = n;
+  let i = 2;
+  while (taken.has(n.toLowerCase())) n = base.slice(0, 12) + ' ' + i++;
+  return n;
+}
+
+// pose: [ts, x, y, z, heading, lean, pitch, wheelie, progress, speed]
+function validPose(d) {
+  if (!Array.isArray(d) || d.length !== 10) return false;
+  for (let i = 0; i < 10; i++) if (!isNum(d[i])) return false;
+  if (Math.abs(d[1]) > 6000 || Math.abs(d[3]) > 6000 || Math.abs(d[2]) > 2000) return false;
+  if (Math.abs(d[4]) > 1000 || Math.abs(d[5]) > 3 || Math.abs(d[6]) > 3 || d[7] < -1 || d[7] > 2) return false;
+  if (d[9] < 0 || d[9] > MAX_SPEED || Math.abs(d[8]) > 1e5) return false;
+  return true;
+}
+
 export class Room {
   constructor() {
     this.reset();
   }
 
   reset() {
-    this.players = new Map(); // id -> {id,name,color,ready,ws,connected,fin}
+    this.players = new Map(); // public id -> player
+    this.tokens = new Map();  // secret token -> public id
     this.hostId = null;
     this.phase = 'lobby'; // lobby | loading | race
     this.cfg = { stage: 0 };
     this.loaded = new Set();
     this.finCount = 0;
+    this.startAt = 0;
     this.timer = null;
+    this.endTimer = null;
+    this.idle = null;
   }
 
   async fetch(req) {
@@ -37,9 +90,9 @@ export class Room {
     const [client, server] = Object.values(pair);
     server.accept();
     const mode = url.searchParams.get('mode') === 'create' ? 'create' : 'join';
-    const name = (url.searchParams.get('name') || 'Rider').replace(/[<>&"]/g, '').slice(0, 14) || 'Rider';
-    const pid = (url.searchParams.get('pid') || '').replace(/[^A-Za-z0-9]/g, '').slice(0, 16) || crypto.randomUUID().slice(0, 8);
-    this.attach(server, mode, name, pid);
+    const name = url.searchParams.get('name') || '';
+    const tok = (url.searchParams.get('tok') || '').replace(/[^a-f0-9]/g, '').slice(0, 40);
+    this.attach(server, mode, name, tok);
     return new Response(null, { status: 101, webSocket: client });
   }
 
@@ -73,30 +126,37 @@ export class Room {
     try { ws.close(1000, code); } catch (e) { /* closed */ }
   }
 
-  attach(ws, mode, name, pid) {
-    let p = this.players.get(pid);
-    if (p && p.connected) { // same id already connected: replace old socket
-      try { p.ws.close(1000, 'replaced'); } catch (e) { /* closed */ }
-      p.connected = false;
-    }
-    if (!p) {
+  attach(ws, mode, name, tok) {
+    let p = null;
+    const knownId = tok ? this.tokens.get(tok) : null;
+    if (knownId) p = this.players.get(knownId) || null;
+    if (p) { // reconnect with the player's own secret token
+      if (p.connected) { try { p.ws.close(1000, 'replaced'); } catch (e) { /* closed */ } }
+      p.ws = ws; p.connected = true;
+    } else {
       if (mode === 'join' && this.connectedCount() === 0) return this.refuse(ws, 'noroom');
       if (mode === 'create' && this.connectedCount() > 0) return this.refuse(ws, 'exists');
       if (this.phase !== 'lobby') return this.refuse(ws, 'busy');
       if (this.connectedCount() >= MAX_PLAYERS) return this.refuse(ws, 'full');
-      if (this.connectedCount() === 0) this.reset();
+      if (this.connectedCount() === 0) { clearTimeout(this.timer); clearTimeout(this.endTimer); this.reset(); }
       const used = new Set([...this.players.values()].map(q => q.color));
       let color = 0;
       while (used.has(color)) color++;
-      p = { id: pid, name, color, ready: false, ws, connected: true, fin: null };
-      this.players.set(pid, p);
-    } else {
-      p.ws = ws; p.connected = true; p.name = name;
+      const taken = new Set([...this.players.values()].map(q => q.name.toLowerCase()));
+      const id = shortId();
+      const token = secret();
+      p = { id, tok: token, name: cleanName(name, taken), color, ready: false, ws, connected: true, fin: null,
+            seen: Date.now(), prog: 0, progAt: 0, win: 0, winN: {} };
+      this.players.set(id, p);
+      this.tokens.set(token, id);
     }
-    if (!this.hostId || !this.players.get(this.hostId) || !this.players.get(this.hostId).connected) this.hostId = pid;
+    p.seen = Date.now();
+    if (!this.hostId || !this.players.get(this.hostId) || !this.players.get(this.hostId).connected) this.hostId = p.id;
 
-    this.send(ws, { t: 'welcome', id: pid, host: this.hostId, cfg: this.cfg, phase: this.phase, players: this.roster() });
+    // the secret token goes only to this socket, never into rosters
+    this.send(ws, { t: 'welcome', id: p.id, tok: p.tok, host: this.hostId, cfg: this.cfg, phase: this.phase, players: this.roster() });
     this.pushPlayers();
+    this.ensureIdleCheck();
 
     ws.addEventListener('message', ev => this.onMessage(p, ws, ev.data));
     const gone = () => this.onClose(p, ws);
@@ -104,24 +164,55 @@ export class Room {
     ws.addEventListener('error', gone);
   }
 
+  ensureIdleCheck() {
+    if (this.idle) return;
+    this.idle = setInterval(() => {
+      const now = Date.now();
+      for (const p of this.players.values()) {
+        if (p.connected && now - p.seen > IDLE_MS) { try { p.ws.close(1001, 'idle'); } catch (e) { /* closed */ } this.onClose(p, p.ws); }
+      }
+      if (this.connectedCount() === 0) { clearInterval(this.idle); this.idle = null; }
+    }, 15000);
+  }
+
+  // allow at most `max` messages of a type per second per player
+  limited(p, type, max) {
+    const sec = (Date.now() / 1000) | 0;
+    if (p.win !== sec) { p.win = sec; p.winN = {}; }
+    p.winN[type] = (p.winN[type] || 0) + 1;
+    return p.winN[type] > max;
+  }
+
   onMessage(p, ws, raw) {
-    if (p.ws !== ws || typeof raw !== 'string' || raw.length > 600) return;
+    if (p.ws !== ws || typeof raw !== 'string' || raw.length > 400) return;
+    p.seen = Date.now();
     let m;
     try { m = JSON.parse(raw); } catch (e) { return; }
+    if (!m || typeof m.t !== 'string') return;
+    if (this.limited(p, 'all', 60)) { try { ws.close(1008, 'rate'); } catch (e) { /* closed */ } return; }
     switch (m.t) {
       case 'ping':
-        this.send(ws, { t: 'pong', c: m.c, s: Date.now() });
+        if (!this.limited(p, 'ping', 12) && isNum(m.c)) this.send(ws, { t: 'pong', c: m.c, s: Date.now() });
         break;
       case 'p':
-        if (this.phase === 'race' && Array.isArray(m.d)) this.broadcast({ t: 'p', i: p.id, d: m.d }, p.id);
+        if (this.phase === 'race' && !this.limited(p, 'p', 25) && validPose(m.d)) {
+          const now = Date.now();
+          const dt = Math.min(2, Math.max(0.01, (now - (p.progAt || now - 66)) / 1000));
+          const grow = MAX_SPEED * dt + 20;
+          const prog = Math.min(m.d[8], p.prog + grow);
+          p.prog = Math.max(p.prog, prog);
+          p.progAt = now;
+          const d = m.d.slice();
+          d[8] = Math.max(0, Math.round(prog * 10) / 10);
+          this.broadcast({ t: 'p', i: p.id, d }, p.id);
+        }
         break;
       case 'ready':
-        if (this.phase === 'lobby') { p.ready = !!m.v; this.pushPlayers(); }
+        if (this.phase === 'lobby' && !this.limited(p, 'ready', 4)) { p.ready = !!m.v; this.pushPlayers(); }
         break;
       case 'cfg':
-        if (p.id === this.hostId && this.phase === 'lobby') {
-          const st = Math.max(0, Math.min(STAGES - 1, m.stage | 0));
-          this.cfg = { stage: st };
+        if (p.id === this.hostId && this.phase === 'lobby' && !this.limited(p, 'cfg', 4)) {
+          this.cfg = { stage: Math.max(0, Math.min(STAGES - 1, m.stage | 0)) };
           this.pushPlayers();
         }
         break;
@@ -135,24 +226,33 @@ export class Room {
         }
         break;
       case 'fin':
-        if (this.phase === 'race' && p.fin == null && typeof m.time === 'number') {
-          p.fin = m.time;
-          this.finCount++;
-          this.broadcast({ t: 'fin', i: p.id, time: m.time, place: this.finCount });
-          this.checkEnd();
-        }
-        break;
-      case 'lobby': // a finished or leaving player asks to be back in the lobby: nothing to do
+        if (this.phase === 'race' && p.fin == null && isNum(m.time)) this.onFinish(p, m.time);
         break;
       default:
     }
+  }
+
+  onFinish(p, time) {
+    const stage = this.cfg.stage;
+    const elapsed = (Date.now() - this.startAt) / 1000;
+    // a finish must come after the race really ran this long, with a plausible time,
+    // and the player's relayed progress must have (nearly) covered the race distance
+    if (time < STAGE_MIN_TIME[stage] || time > 1800) return;
+    if (elapsed < STAGE_MIN_TIME[stage] - 3) return;
+    if (time < elapsed - 8 && time < elapsed * 0.8) return;
+    if (p.prog < STAGE_TOTAL[stage] * 0.96) return;
+    p.fin = Math.round(time * 100) / 100;
+    this.finCount++;
+    this.broadcast({ t: 'fin', i: p.id, time: p.fin, place: this.finCount });
+    if (this.finCount === 1 && !this.endTimer) this.endTimer = setTimeout(() => this.endRace(), FIN_STRAGGLER_MS);
+    this.checkEnd();
   }
 
   startLoading() {
     this.phase = 'loading';
     this.loaded = new Set();
     this.finCount = 0;
-    for (const q of this.players.values()) q.fin = null;
+    for (const q of this.players.values()) { q.fin = null; q.prog = 0; q.progAt = 0; }
     this.broadcast({ t: 'prep', stage: this.cfg.stage, players: this.roster() });
     this.pushPlayers();
     clearTimeout(this.timer);
@@ -162,10 +262,10 @@ export class Room {
   goRace() {
     clearTimeout(this.timer);
     this.phase = 'race';
-    this.broadcast({ t: 'go', startAt: Date.now() + 4500 });
+    this.startAt = Date.now() + 4500;
+    this.broadcast({ t: 'go', startAt: this.startAt });
     this.pushPlayers();
-    // safety net: end the race after 25 minutes
-    this.timer = setTimeout(() => this.endRace(), 25 * 60 * 1000);
+    this.timer = setTimeout(() => this.endRace(), 25 * 60 * 1000); // safety net
   }
 
   checkEnd() {
@@ -178,10 +278,12 @@ export class Room {
   endRace() {
     if (this.phase === 'lobby') return;
     clearTimeout(this.timer);
+    clearTimeout(this.endTimer);
+    this.endTimer = null;
     this.phase = 'lobby';
     for (const [id, q] of [...this.players]) {
-      q.ready = false; q.fin = null;
-      if (!q.connected) this.players.delete(id);
+      q.ready = false; q.fin = null; q.prog = 0; q.progAt = 0;
+      if (!q.connected) { this.players.delete(id); this.tokens.delete(q.tok); }
     }
     this.broadcast({ t: 'end' });
     this.pushPlayers();
@@ -190,8 +292,12 @@ export class Room {
   onClose(p, ws) {
     if (p.ws !== ws || !p.connected) return;
     p.connected = false;
-    if (this.phase === 'lobby') this.players.delete(p.id);
-    if (this.connectedCount() === 0) { clearTimeout(this.timer); this.reset(); return; }
+    if (this.phase === 'lobby') { this.players.delete(p.id); this.tokens.delete(p.tok); }
+    if (this.connectedCount() === 0) {
+      clearTimeout(this.timer); clearTimeout(this.endTimer); clearInterval(this.idle);
+      this.reset();
+      return;
+    }
     if (this.hostId === p.id) {
       const next = [...this.players.values()].find(q => q.connected);
       this.hostId = next ? next.id : null;

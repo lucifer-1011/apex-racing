@@ -527,6 +527,21 @@ function makeObstacle(kind,rng){
 let ST=null,X,Y,Z,HD,K,M=0,DS=3,L=0,CS=75,bkt,bKX,bKZ,bMinX,bMinZ,meanY=0;
 let TH,tnx,tnz,tc,tMinX,tMinZ;
 let TR=[],worldGroup=null,worldExtras={},GANTRY=[];
+/* ===== per-map extension points (stages/<id>.js register visual upgrades here) =====
+   Every hook is wrapped: if a map module throws, that hook switches itself off and the built-in
+   behaviour is used. Add ?mods=0 to the page address to turn all map modules off. */
+const MODS={},UPD=[];const MODS_ON=!/[?&]mods=0/.test(location.search);
+window.ApexKit={version:1,register(id,mod){if(mod&&typeof mod==='object')MODS[id]=mod;},get enabled(){return MODS_ON;}};
+function modFn(id,name){
+  const m=MODS_ON&&MODS[id];if(!m||typeof m[name]!=='function')return null;let dead=false;
+  return function(a,b,c,d,e,f,g,h,i,j){if(dead)return undefined;try{return m[name](a,b,c,d,e,f,g,h,i,j);}catch(err){dead=true;console.warn('[map module] '+id+'.'+name+' switched off:',err);return undefined;}};
+}
+let _kit=null;
+function stageKit(){return _kit||(_kit={THREE,PI,TAU,GRAV,clamp,lerp,sstep,mod,angDiff,fbm,vnoise,hash2,mulberry,geo,mesh,box,ell,cyl,rod,fender,vm,glassM,tyreM,redL,whiteL,carWheels,mergeByMaterial,inst,TOUCH,
+  get st(){return ST;},get L(){return L;},get M(){return M;},get DS(){return DS;},
+  pose:(s,o)=>{const q=pose(s,o);return{x:q.x,y:q.y,z:q.z,hd:q.hd};},
+  nearest:(x,z)=>{const r=nearest(x,z,-1);return{j:r.j,f:r.f,d:r.d,dist:r.dist};},
+  terrainH,roadYAt,addUpdater(fn){if(typeof fn==='function')UPD.push(fn);}});}
 const polarR=(st,th)=>{let r=1;for(const h of st.harm)r+=h[1]*Math.sin(h[0]*th+h[2]);return st.R*r;};
 const elevAt=(st,th)=>{let y=st.elevBase;for(const e of st.elev)y+=e[1]*Math.sin(e[0]*th+e[2]);return y;};
 function offroadBump(s){
@@ -585,6 +600,7 @@ function buildTerrain(st,bb){
   const c=st.cell*(TOUCH?1.35:1),m=st.margin;tc=c;tMinX=bb.minX-m;tMinZ=bb.minZ-m;
   tnx=Math.floor((bb.maxX+m-tMinX)/c)+1;tnz=Math.floor((bb.maxZ+m-tMinZ)/c)+1;
   TH=new Float32Array(tnx*tnz);const R=75,R2=R*R,half=st.half,sd=st.seed;
+  const fFeat=modFn(st.id,'terrainFeat'),fCol=modFn(st.id,'terrainColor'),kit=stageKit();
   const info=new Float32Array(tnx*tnz*2);// dn, rho
   for(let iz=0;iz<tnz;iz++)for(let ix=0;ix<tnx;ix++){
     const x=tMinX+ix*c,z=tMinZ+iz*c;let bd=1e18,bj=-1,sw=0,sy=0;
@@ -602,6 +618,7 @@ function buildTerrain(st,bb){
     }
     else if(st.id==='offroad'){feat=9*fbm(x*.006,z*.006,sd)+2.5*fbm(x*.03,z*.03,sd+4)+42*sstep(1.3,2.1,rho)*(.6+.4*fbm(x*.01,z*.01,sd+9));}
     else{feat=18*fbm(x*.008,z*.008,sd)+5*fbm(x*.04,z*.04,sd+2)+6*sstep(1.2,2,rho);}
+    if(fFeat){const add=fFeat(x,z,rho,dn,kit);if(typeof add==='number'&&isFinite(add))feat+=add*sstep(half+8,half+60,dn);}
     const t=sstep(half+4,half+4+st.blend,dn);
     const yr=bj<0?0:Y[bj]-st.curb;
     TH[ix+iz*tnx]=bj<0?ybar+feat:lerp(yr,ybar+feat,t);
@@ -617,6 +634,7 @@ function buildTerrain(st,bb){
     else if(st.id==='mountain'){const rel=h-meanY;cc.setHex(0x4e7d3b).lerp(new THREE.Color(0x628a45),n1);cc.lerp(new THREE.Color(0x7b746b),Math.max(sstep(.35,.8,sl),sstep(70,110,rel)));cc.lerp(new THREE.Color(0xf0f3f7),sstep(115,150,rel));if(h<waterY+4)cc.setHex(0xb5a77a);if(near&&sl<.6)cc.setHex(0x6b6a5e);}
     else if(st.id==='offroad'){cc.setHex(0xe6c58f).lerp(new THREE.Color(0xd8b078),n1);cc.lerp(new THREE.Color(0xa4583a),sstep(.3,.7,sl));if(near)cc.setHex(0x7a5232);}
     else{cc.setHex(0x2d5a2b).lerp(new THREE.Color(0x1f4b25),n1);cc.lerp(new THREE.Color(0x5a5a50),sstep(.6,1.1,sl));if(near)cc.setHex(0x5a4630);}
+    if(fCol){fCol(cc,x,z,h,sl,dn,n1,near,kit,waterY);cc.r=clamp(cc.r,0,1);cc.g=clamp(cc.g,0,1);cc.b=clamp(cc.b,0,1);}
     col[i*3]=cc.r;col[i*3+1]=cc.g;col[i*3+2]=cc.b;
   }
   const idx=new Uint32Array((tnx-1)*(tnz-1)*6);let q=0;
@@ -670,28 +688,33 @@ function signTexture(txt,bg){const cv=document.createElement('canvas');cv.width=
 function makeEnv(st){const es=new THREE.Scene();es.add(skyMesh(st,50));const pm=new THREE.PMREMGenerator(renderer);const t=pm.fromScene(es).texture;pm.dispose();return t;}
 let sunLight,spot,sky;
 function buildWorld(st){
-  ST=st;GANTRY=[];const bb=buildTrack(st);const rng=mulberry(st.seed);
+  ST=st;GANTRY=[];UPD.length=0;const mx=MODS_ON?(MODS[st.id]||null):null;const bb=buildTrack(st);const rng=mulberry(st.seed);
   const grp=new THREE.Group();
   const T=buildTerrain(st,bb);grp.add(T.mesh);
   // road
-  const rt=roadTexture(st);const tl=L/Math.round(L/st.texLen);
+  const fRoad=modFn(st.id,'roadTexture');let rt=fRoad?fRoad(st,stageKit()):null;
+  if(rt&&rt.isTexture){rt.wrapS=rt.wrapT=THREE.RepeatWrapping;rt.anisotropy=8;}else rt=roadTexture(st);
+  const texLen=(mx&&typeof mx.texLen==='number'&&mx.texLen>2)?mx.texLen:st.texLen;const tl=L/Math.round(L/texLen);
   const road=ribbon(-st.half,st.half,.03,.03,new THREE.MeshLambertMaterial({map:rt}),false,null,tl);
   road.material.polygonOffset=true;road.material.polygonOffsetFactor=-1;road.material.polygonOffsetUnits=-1;grp.add(road);
   // lights & fog
   scene=new THREE.Scene();scene.add(grp);
   scene.fog=new THREE.FogExp2(st.fog[0],st.fog[1]);scene.background=new THREE.Color(st.fog[0]);
-  scene.add(new THREE.HemisphereLight(st.hemi[0],st.hemi[1],st.hemi[2]));
+  const hemi=new THREE.HemisphereLight(st.hemi[0],st.hemi[1],st.hemi[2]);scene.add(hemi);
   sunLight=new THREE.DirectionalLight(st.sun[0],st.sun[2]);sunLight.castShadow=true;sunLight.shadow.mapSize.set(TOUCH?1024:2048,TOUCH?1024:2048);
   const sc=sunLight.shadow.camera;sc.left=-40;sc.right=40;sc.top=40;sc.bottom=-40;sc.near=1;sc.far=260;sunLight.shadow.bias=-.0006;
   scene.add(sunLight,sunLight.target);
   sky=skyMesh(st);scene.add(sky);scene.environment=makeEnv(st);
+  const ctx={st,grp,scene,sunLight,hemi,sky,rng,kit:stageKit(),L,M,DS,TOUCH};
+  {const fAtm=modFn(st.id,'atmosphere');if(fAtm)fAtm(ctx);}
   // water
   if(st.id==='mountain'){const w=new THREE.Mesh(new THREE.PlaneGeometry(6000,6000),new THREE.MeshLambertMaterial({color:0x2d6f8c,transparent:true,opacity:.88}));w.rotation.x=-PI/2;w.position.y=T.waterY;grp.add(w);}
   // clouds
   if(st.id!=='jungle'){const cm=new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.85,fog:false});for(let i=0;i<22;i++){const cg=new THREE.Group();const ang=rng()*TAU,rd=800+rng()*1800;for(let k=0;k<4;k++){const s=mesh(geo('SphereGeometry',1,8,6),cm,[k*50-80,rng()*12,rng()*40],null,[70+rng()*50,18+rng()*8,50]);s.castShadow=false;cg.add(s);}cg.position.set(Math.cos(ang)*rd,320+rng()*180,Math.sin(ang)*rd);grp.add(cg);}}
   // generic prop placement
   const place=(minOff,maxOff,tries)=>{for(let t=0;t<(tries||6);t++){const j=(rng()*M)|0,side=rng()<.5?-1:1,off=side*(st.half+minOff+rng()*(maxOff-minOff));const p=pose(j*DS,off);const px=p.x,pz=p.z;const r=nearest(px,pz,-1);if(r.dist>st.half+minOff-1.2||r.dist>1e8)return{x:px,z:pz,y:terrainH(px,pz),j:j,side:side};}return null;};
-  const scatter=(n,a,b)=>{n=Math.round(n*(TOUCH?.6:1));const out=[];for(let i=0;i<n;i++){const p=place(a,b);if(p)out.push(p);}return out;};
+  const pScale=(mx&&typeof mx.propScale==='number')?clamp(mx.propScale,0,2):1;
+  const scatter=(n,a,b)=>{n=Math.round(n*(TOUCH?.6:1)*pScale);const out=[];for(let i=0;i<n;i++){const p=place(a,b);if(p)out.push(p);}return out;};
   const greens=[0x2f6b2f,0x3c7a34,0x2a5a2a,0x4a8a3a];
   const trees=(n,a,b,sMin,sMax,broad,cols)=>{const items=scatter(n,a,b);
     if(broad){const tr=items.map(p=>({x:p.x,y:p.y-.3,z:p.z,sx:sMin+rng()*(sMax-sMin),c:0x5a4630}));const cn=items.map((p,i)=>({x:p.x,y:p.y-.3,z:p.z,sx:tr[i].sx,sy:tr[i].sx*(.9+rng()*.5),ry:rng()*6,c:cols[(rng()*cols.length)|0]}));
@@ -743,6 +766,7 @@ function buildWorld(st){
     trees(2600,3.2,150,1.2,2.4,true,[0x1f5a24,0x2a6b2a,0x174a1e,0x2f7a30]);rocks(80,4,60,1,3,[0x5a5a50,0x6a6a5c]);
     const fn=scatter(700,2.2,40);grp.add(inst(geo('ConeGeometry',1.2,1.1,6).clone().translate(0,.55,0),new THREE.MeshLambertMaterial({color:0x2c6a22}),fn.map(p=>({x:p.x,y:p.y,z:p.z,sx:.8+rng()*.9,sy:1}))));
   }
+  {const fp=modFn(st.id,'props');if(fp){ctx.place=place;ctx.scatter=scatter;ctx.trees=trees;ctx.rocks=rocks;ctx.rail=rail;fp(ctx);}}
   // start gate
   {const p=pose(0,0);const g=new THREE.Group();const mt=new THREE.MeshLambertMaterial({color:0x222222});
    for(const sd of[-1,1])cyl(g,mt,.2,.2,6.5,[sd*(st.half+.8),3.2,0]);
@@ -750,15 +774,18 @@ function buildWorld(st){
    g.position.set(p.x,p.y,p.z);g.rotation.y=p.hd;grp.add(g);}
   // traffic
   TR=[];const trng=mulberry(st.seed+99);
+  const fVeh=modFn(st.id,'vehicle'),fObs=modFn(st.id,'obstacle');
+  const vKinds=(mx&&Array.isArray(mx.kinds)&&mx.kinds.length)?mx.kinds:st.kinds,oKinds=(mx&&Array.isArray(mx.obstKinds)&&mx.obstKinds.length)?mx.obstKinds:st.obst;
   for(const lane of st.lanes){let s=60+st.gap[0]+trng()*(st.gap[1]-st.gap[0]);while(s<L-st.gap[0]){
-     const kind=st.kinds[(trng()*st.kinds.length)|0];
+     const kind=vKinds[(trng()*vKinds.length)|0];
      const clear=lane.dir>0?(s>L-(lane.speed*14+160)):(s<lane.speed*14+220);
      if(clear){s+=st.gap[0]+trng()*(st.gap[1]-st.gap[0]);continue;}
-     const v=makeVehicle(kind,trng);grp.add(v.obj);
+     let v=fVeh?fVeh(kind,trng,stageKit()):null;if(!(v&&v.obj&&v.hw>0&&v.hl>0))v=makeVehicle(kind,trng);grp.add(v.obj);
      TR.push({s0:s,off:lane.off,dir:lane.dir,speed:lane.speed,obj:v.obj,hw:v.hw,hl:v.hl,s:s,fixed:false});
      s+=st.gap[0]+trng()*(st.gap[1]-st.gap[0]);}}
-  if(st.nObst){for(let i=0;i<st.nObst;i++){const kind=st.obst[(trng()*st.obst.length)|0];const o=makeObstacle(kind,trng);grp.add(o.obj);
-     const s=(i+1)*L/(st.nObst+1)+trng()*20-10;const lim=st.half-1.4;const off=kind==='log'?(trng()<.5?-1:1)*(st.id==='jungle'?.3:0)+0:(trng()*2-1)*lim;
+  const nObst=(mx&&typeof mx.nObst==='number')?clamp(mx.nObst|0,0,30):(st.nObst||0);
+  if(nObst&&oKinds&&oKinds.length){for(let i=0;i<nObst;i++){const kind=oKinds[(trng()*oKinds.length)|0];let o=fObs?fObs(kind,trng,stageKit()):null;if(!(o&&o.obj&&o.hw>0&&o.hl>0))o=makeObstacle(kind,trng);grp.add(o.obj);
+     const s=(i+1)*L/(nObst+1)+trng()*20-10;const lim=st.half-1.4;const off=kind==='log'?(trng()<.5?-1:1)*(st.id==='jungle'?.3:0)+0:(trng()*2-1)*lim;
      const sp=s<70||s>L-70?s+120:s;
      TR.push({s0:sp,off:off,dir:1,speed:0,obj:o.obj,hw:o.hw,hl:o.hl,s:sp,fixed:true,yaw:kind==='log'?(trng()-.5)*.5:trng()*6});}}
   // headlight spot
@@ -1079,6 +1106,7 @@ function startGame(){
       $('loading').classList.remove('on');$('hud').classList.add('on');document.body.classList.add('playing');
       buildMini();
       if(S.mode==='multi')mpSend({t:'loaded'});
+      if(DEMO){placeOnRoad(DEMO.at,ST.startP);Pl.holdBrake=true;Pl.syncProg=true;}
     }catch(err){console.error(err);$('loading').classList.remove('on');$('menu').classList.add('on');S.state='menu';alert&&0;}
   },60);
 }
@@ -1566,11 +1594,19 @@ function frame(now){
     if(Pl.light&&(Math.floor(performance.now()/350)!==Pl.tickN)&&(Pl.indL||Pl.indR||Pl.haz)){Pl.tickN=Math.floor(performance.now()/350);Snd.tick();}
     if(S.mode==='multi'){mpUpdateRemotes(dt);mpSendPose(now);}
     updateGantries(now);
+    for(let i=0;i<UPD.length;i++){try{UPD[i](dt,now);}catch(err){console.warn('[map module] updater removed:',err);UPD.splice(i--,1);}}
     updateCamera(dt);
     updateHUD();
   }
   renderer.render(scene,camera);
 }
+/* screenshot helper: index.html?demo=<stage 0-3>&at=<metres along the track>&cam=<0-3> starts Free Roam parked at that spot */
+const DEMO=(()=>{const m=/[?&]demo=(\d)/.exec(location.search);if(!m)return null;const a=/[?&]at=(\d+)/.exec(location.search),c=/[?&]cam=(\d)/.exec(location.search);return{stage:Math.min(3,+m[1]),at:a?+a[1]:0,cam:c?+c[1]:0};})();
 refreshMenu();requestAnimationFrame(frame);
+if(DEMO){S.stage=DEMO.stage;S.mode='roam';S.auto=true;S.cam=DEMO.cam;refreshMenu();setTimeout(startGame,300);}
 })();
 </script>
+<script src="stages/highway.js"></script>
+<script src="stages/mountain.js"></script>
+<script src="stages/offroad.js"></script>
+<script src="stages/jungle.js"></script>

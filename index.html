@@ -153,32 +153,112 @@ body.touch .card,body.touch .seg button,body.touch .ghostbtn{min-height:44px}
 #mpMsg{position:absolute;left:0;right:0;top:36%;text-align:center;font-size:28px;font-weight:700;text-shadow:0 3px 14px #000}
 body.touch #board{top:112px;right:var(--sr,14px)}
 body.touch #board div{font-size:12px;padding:1px 6px}
+
+/* ===== landing page ===== */
+#menu.on{display:flex;flex-direction:column;padding:0;gap:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;background:linear-gradient(180deg,rgba(5,7,11,.62) 0%,rgba(5,7,11,.12) 24%,rgba(5,7,11,0) 46%,rgba(5,7,11,.9) 100%)}
+#menu button:focus-visible{outline:2px solid #fff;outline-offset:3px}
+.lp-top{display:flex;align-items:center;gap:18px;padding:max(14px,env(safe-area-inset-top,0px)) max(24px,env(safe-area-inset-right,0px)) 6px max(24px,env(safe-area-inset-left,0px))}
+.lp-top .brand{font-size:30px;white-space:nowrap}
+.lp-tag{flex:1;color:var(--muted);font-size:14px;letter-spacing:.08em;margin:0;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lp-mp{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;padding:7px 18px;line-height:1.05;font-size:16px;letter-spacing:.14em;border-color:rgba(255,255,255,.28);background:rgba(10,12,18,.55);backdrop-filter:blur(6px)}
+.lp-mp span{font-size:10px;letter-spacing:.2em;color:var(--accent2);font-weight:600}
+.lp-main{flex:1 0 auto;display:grid;grid-template-columns:minmax(300px,520px) 1fr;gap:24px;padding:6px max(24px,env(safe-area-inset-right,0px)) 6px max(24px,env(safe-area-inset-left,0px));min-height:0}
+.lp-left{display:flex;flex-direction:column;justify-content:center;gap:12px;min-width:0}
+.lp-h{font-size:clamp(34px,4.6vw,58px);line-height:.95;font-weight:700;letter-spacing:.03em;text-transform:uppercase;white-space:nowrap;text-shadow:0 3px 20px rgba(0,0,0,.6)}
+.lp-h em{font-style:normal;color:var(--accent)}
+.lp-p{font-size:16px;line-height:1.3;color:#d3d9e6;max-width:440px;text-shadow:0 1px 10px #000}
+.lp-set{display:flex;flex-direction:column;gap:11px;background:rgba(10,12,18,.66);border:1px solid var(--line);border-radius:16px;padding:14px 16px;backdrop-filter:blur(8px)}
+.lp-set .opt label{margin-bottom:4px}
+.lp-set #optRow{display:flex;flex-wrap:wrap;gap:8px 16px}
+.lp-set #optRow .seg{flex-wrap:nowrap}
+.lp-set .seg button{padding:7px 12px;white-space:nowrap}
+.lp-set .cta{margin-top:2px;padding:14px;font-size:24px;box-shadow:0 8px 28px -8px rgba(255,90,31,.7)}
+.lp-right{display:flex;min-width:0}
+.lp-right .minfo{flex:1;justify-content:flex-end;align-items:flex-end}
+.lp-maps{padding:10px max(24px,env(safe-area-inset-right,0px)) max(18px,env(safe-area-inset-bottom,0px)) max(24px,env(safe-area-inset-left,0px))}
+#stageList.lp-cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.mapc{--c:#ff5a1f;position:relative;display:block;aspect-ratio:16/8.4;min-height:0;padding:0;overflow:hidden;text-align:left;border-radius:14px;border:1px solid rgba(255,255,255,.16);background:linear-gradient(135deg,var(--c),#10131a);transition:transform .22s cubic-bezier(.2,.8,.2,1),border-color .2s,box-shadow .22s;animation:lpIn .55s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i,0)*70ms)}
+.mapc img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .6s cubic-bezier(.2,.8,.2,1)}
+.mapc:hover{transform:translateY(-3px);border-color:rgba(255,255,255,.4)}
+.mapc:hover img{transform:scale(1.05)}
+.mapc.sel{transform:translateY(-6px);border-color:var(--c);box-shadow:0 0 0 2px var(--c),0 14px 34px -10px var(--c)}
+.mc-sh{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.4) 0%,rgba(0,0,0,0) 32%,rgba(5,7,11,.94) 100%)}
+.mc-n{position:absolute;left:10px;top:9px;min-width:30px;padding:2px 8px;border-radius:7px;background:rgba(5,7,11,.6);border:1px solid rgba(255,255,255,.25);font-size:14px;font-weight:700;letter-spacing:.1em;text-align:center}
+.mapc.sel .mc-n{background:var(--c);border-color:var(--c);color:#10131a}
+.mc-bike{position:absolute;right:10px;top:9px;max-width:60%;padding:2px 9px;border-radius:7px;background:rgba(5,7,11,.6);font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#e7ecf5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mc-b{position:absolute;left:0;right:0;bottom:0;display:flex;flex-direction:column;gap:1px;padding:10px 12px 11px}
+.mc-b strong{font-size:clamp(17px,1.9vw,26px);font-weight:700;line-height:1.05;letter-spacing:.02em;text-shadow:0 2px 10px #000}
+.mc-b em{font-style:normal;font-size:13px;color:#d3d9e6}
+.mc-f{font-size:11.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--c);filter:brightness(1.25)}
+@keyframes lpIn{from{opacity:0;transform:translateY(18px)}to{opacity:1}}
+@media(max-width:900px){
+  .lp-main{grid-template-columns:1fr;gap:10px}
+  .lp-right{display:none}
+  #stageList.lp-cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .lp-left,.lp-set,.lp-main{min-width:0}
+  .lp-set .seg{flex-wrap:wrap}.lp-set #optRow .seg{flex-wrap:wrap}
+  .lp-tag{display:none}.lp-top{justify-content:space-between}
+  .lp-p{display:none}
+}
+@media(max-height:520px) and (min-width:560px){
+  .lp-top{padding-top:max(6px,env(safe-area-inset-top,0px));padding-bottom:2px}
+  .lp-top .brand{font-size:22px}.lp-mp{padding:3px 12px;font-size:13px}.lp-mp span{display:none}
+  .lp-h,.lp-p{display:none}
+  .lp-main{grid-template-columns:minmax(250px,390px) 1fr;gap:14px;padding-top:2px;padding-bottom:2px}
+  .lp-right{display:flex}.lp-right .mdesc{display:none}.lp-right .minfo .bn{font-size:26px}.lp-right .stat{display:none}
+  .lp-set{padding:8px 10px;gap:6px;border-radius:12px}
+  #menu .lp-set .cta{position:static;box-shadow:0 6px 18px -6px rgba(255,90,31,.7);padding:8px;font-size:18px;margin-top:0}
+  .lp-set .seg button{padding:5px 9px;font-size:14px}
+  .lp-set details{display:none}
+  .lp-maps{padding-top:4px;padding-bottom:max(8px,env(safe-area-inset-bottom,0px))}
+  #stageList.lp-cards{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+  .mapc{aspect-ratio:auto;height:96px;border-radius:10px}
+  .mapc.sel{transform:translateY(-3px)}
+  .mc-b em,.mc-bike{display:none}.mc-b{padding:6px 8px}.mc-b strong{font-size:15px}.mc-f{font-size:10px}.mc-n{font-size:11px;top:6px;left:6px;padding:1px 6px}
+}
+@media(max-width:900px) and (orientation:portrait){
+  .lp-h{font-size:40px}
+  .lp-top{gap:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}.lp-top .brand{font-size:24px}.lp-mp{padding:5px 12px;font-size:13px}.lp-mp span{font-size:9px}
+  .lp-main,.lp-maps{padding-left:16px;padding-right:16px}
+  .lp-set .seg button{padding:7px 10px}
+  .mc-b em{display:none}.mc-bike{font-size:10px}
+}
+@media(prefers-reduced-motion:reduce){.mapc,.mapc img{transition:none;animation:none}}
 </style>
 
 <canvas id="c"></canvas>
 
 <div id="menu" class="screen on">
-  <div class="mpanel">
+  <header class="lp-top">
     <div class="brand">APEX<b>RIDER</b></div>
-    <div class="sub" id="subLine">3D motorcycle riding · keyboard or touch</div>
-    <h2>Stage and bike</h2>
-    <div id="stageList"></div>
-    <h2>Mode</h2>
-    <div class="seg" id="modeSeg"></div>
-    <div id="optRow">
-      <div class="opt" id="diffOpt"><label>Rival skill</label><div class="seg" id="diffSeg"></div></div>
-      <div class="opt"><label>Transmission</label><div class="seg" id="transSeg"></div></div>
-      <div class="opt"><label>Controls</label><div class="seg" id="ctlSeg"></div></div>
-    </div>
-    <button id="startBtn" class="cta">START RIDE</button>
-    <button id="mpBtn" class="ghostbtn">MULTIPLAYER · 2 TO 5 PLAYERS</button>
-    <details><summary>Controls</summary><div class="ctrl" id="ctrlGrid"></div></details>
-  </div>
-  <div class="minfo">
-    <div class="bc" id="bCls"></div><div class="bn" id="bName"></div>
-    <div id="bStats" style="display:flex;flex-direction:column;gap:5px;align-items:flex-end;width:100%"></div>
-    <div class="mdesc" id="mDesc"></div>
-  </div>
+    <div class="lp-tag" id="subLine">3D motorcycle riding</div>
+    <button id="mpBtn" class="ghostbtn lp-mp">MULTIPLAYER<span>2 TO 5 PLAYERS</span></button>
+  </header>
+  <main class="lp-main">
+    <section class="lp-left">
+      <h1 class="lp-h">Pick your <em>road.</em></h1>
+      <p class="lp-p">Four maps, four bikes. Race a rival, beat your own ghost, or just ride.</p>
+      <div class="lp-set">
+        <div class="opt"><label>Mode</label><div class="seg" id="modeSeg"></div></div>
+        <div id="optRow">
+          <div class="opt" id="diffOpt"><label>Rival skill</label><div class="seg" id="diffSeg"></div></div>
+          <div class="opt"><label>Transmission</label><div class="seg" id="transSeg"></div></div>
+        </div>
+        <button id="startBtn" class="cta">START RIDE</button>
+        <details><summary>Controls and input</summary><div class="opt" style="margin-top:8px"><label>Control type</label><div class="seg" id="ctlSeg"></div></div><div class="ctrl" id="ctrlGrid"></div></details>
+      </div>
+    </section>
+    <aside class="lp-right">
+      <div class="minfo">
+        <div class="bc" id="bCls"></div><div class="bn" id="bName"></div>
+        <div id="bStats" style="display:flex;flex-direction:column;gap:5px;align-items:flex-end;width:100%"></div>
+        <div class="mdesc" id="mDesc"></div>
+      </div>
+    </aside>
+  </main>
+  <section class="lp-maps" aria-label="Choose a map">
+    <div id="stageList" class="lp-cards" role="radiogroup" aria-label="Map"></div>
+  </section>
 </div>
 
 <div id="lobby" class="screen ov"><div class="box lob">
@@ -324,6 +404,7 @@ const STAGES=[
   sky:[0x7fa192,0xb8cdbd],fog:[0x9db5a4,.0068],sun:[0xe8f0d0,[.3,.7,.5],.85],hemi:[0xa9c9b0,0x2a3a20,.85],cell:7,margin:380,blend:14,texLen:12,dust:0x6a5a40}
 ];
 const modeName=id=>id==='multi'?'Multiplayer':MODES.find(x=>x.id===id).name;
+const MAPUI={highway:{c:'#4f9dff',file:'highway',facts:'4.5 km \u00b7 2 laps \u00b7 heavy traffic'},mountain:{c:'#ff9a5c',file:'mountain',facts:'3.1 km \u00b7 2 laps \u00b7 two-way road'},offroad:{c:'#ffb347',file:'offroad',facts:'1.8 km \u00b7 3 laps \u00b7 jumps'},jungle:{c:'#5fcf86',file:'jungle',facts:'2.4 km \u00b7 2 laps \u00b7 mud & mist'}};
 const MODES=[{id:'challenge',name:'Challenge',desc:'Race a rival rider over the full distance. Dodge traffic, beat the clock and the AI.'},
  {id:'ghost',name:'Ghost',desc:'Beat your own best run. A translucent ghost replays your record beside you.'},
  {id:'roam',name:'Free Roam',desc:'No timer, no rival. Ride the map as long as you like.'}];
@@ -1416,13 +1497,19 @@ function showMenuBike(){
 }
 function menuStep(d,what){if(what==='stage'){S.stage=mod(S.stage+d,STAGES.length);refreshMenu();}}
 function refreshMenu(){
-  const sl=$('stageList');sl.innerHTML='';
-  STAGES.forEach((st,i)=>{const b=document.createElement('button');b.className='card'+(i===S.stage?' sel':'');const best=bestStore[st.id];
-    b.innerHTML='<span class="n">'+(i+1)+' · '+st.name+'</span><span class="s">'+st.sub+'</span><span class="b">'+BIKES[st.bike].name+(best?' · Best '+fmt(best.time):'')+'</span>';
-    b.onclick=()=>{S.stage=i;refreshMenu();};sl.appendChild(b);});
+  const sl=$('stageList');
+  if(sl.children.length!==STAGES.length){
+    sl.innerHTML='';
+    STAGES.forEach((st,i)=>{const u=MAPUI[st.id];const b=document.createElement('button');b.type='button';b.className='mapc';b.style.setProperty('--c',u.c);b.style.setProperty('--i',i);b.setAttribute('role','radio');
+      b.innerHTML='<img src="assets/maps/'+u.file+'.jpg" alt="" decoding="async"><span class="mc-sh"></span><span class="mc-n">0'+(i+1)+'</span><span class="mc-bike">'+BIKES[st.bike].name+'</span><span class="mc-b"><strong>'+st.name+'</strong><em>'+st.sub+'</em><span class="mc-f"></span></span>';
+      b.querySelector('img').addEventListener('error',e=>e.target.remove());
+      b.onclick=()=>{S.stage=i;refreshMenu();};sl.appendChild(b);});
+  }
+  STAGES.forEach((st,i)=>{const b=sl.children[i],best=bestStore[st.id];b.classList.toggle('sel',i===S.stage);b.setAttribute('aria-checked',i===S.stage?'true':'false');
+    b.querySelector('.mc-f').textContent=MAPUI[st.id].facts+(best?' \u00b7 Best '+fmt(best.time):'');});
   const ms=$('modeSeg');ms.innerHTML='';MODES.forEach(m=>{const b=document.createElement('button');b.textContent=m.name;if(m.id===S.mode)b.className='sel';b.onclick=()=>{S.mode=m.id;refreshMenu();};ms.appendChild(b);});
   const ds=$('diffSeg');ds.innerHTML='';diffs.forEach((d,i)=>{const b=document.createElement('button');b.textContent=d.n;if(i===S.diff)b.className='sel';b.onclick=()=>{S.diff=i;refreshMenu();};ds.appendChild(b);});
-  $('diffOpt').style.visibility=S.mode==='challenge'?'visible':'hidden';
+  $('diffOpt').style.display=S.mode==='challenge'?'':'none';
   const ts=$('transSeg');ts.innerHTML='';[['Manual',false],['Auto',true]].forEach(t=>{const b=document.createElement('button');b.textContent=t[0];if(S.auto===t[1])b.className='sel';b.onclick=()=>{S.auto=t[1];refreshMenu();};ts.appendChild(b);});
   const cs=$('ctlSeg');cs.innerHTML='';[['Touch',true],['Keyboard',false]].forEach(t=>{const b=document.createElement('button');b.textContent=t[0];if(TOUCH===t[1])b.className='sel';b.onclick=()=>{setTouch(t[1]);refreshMenu();};cs.appendChild(b);});
   const bk=BIKES[STAGES[S.stage].bike];$('bName').textContent=bk.name;$('bCls').textContent=bk.cls;
@@ -1579,7 +1666,7 @@ function frame(now){
   let dt=Math.min(.05,(now-last)/1000);last=now;
   if(S.state==='menu'){
     menuT+=dt;menuBike.root.rotation.y=menuT*.5+.6;menuHolder.position.set(0,0,0);
-    camera.fov=40;camera.updateProjectionMatrix();camera.position.set(0,1.5,5.2);camera.lookAt(-.95,.55,0);
+    camera.fov=40;camera.updateProjectionMatrix();camera.position.set(0,1.5,5.2);camera.lookAt(-.9,.25,0);
     menuScene.background=menuBg;renderer.render(menuScene,camera);return;
   }
   if(!Pl.bike||!worldGroup){return;}

@@ -57,12 +57,17 @@ kbd{font-family:var(--font);font-weight:700;min-width:26px;text-align:center;pad
 #hSub{font-size:16px;color:#d6dce8;font-variant-numeric:tabular-nums}
 #hGap{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums}
 #mini{position:absolute;right:16px;top:14px;width:150px;height:150px;background:rgba(8,10,15,.55);border:1px solid var(--line);border-radius:10px}
-#toasts{position:absolute;left:50%;top:84px;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:6px}
-.toast{background:rgba(10,12,18,.8);border:1px solid var(--line);border-radius:8px;padding:6px 14px;font-size:19px;font-weight:600;animation:tin .2s ease-out}
-.toast.warn{border-color:var(--accent2);color:var(--accent2)}
-.toast.bad{border-color:var(--bad);color:var(--bad)}
-.toast.ok{border-color:var(--ok);color:var(--ok)}
-@keyframes tin{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+#toasts{position:absolute;left:0;top:200px;display:flex;flex-direction:column;align-items:flex-start;gap:4px;max-width:min(270px,66vw);pointer-events:none}
+.toast{max-width:100%;background:rgba(10,12,18,.78);border-left:3px solid var(--muted);border-radius:0 8px 8px 0;padding:4px 12px 4px 10px;font-size:14px;font-weight:600;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;backdrop-filter:blur(3px);animation:tin .22s cubic-bezier(.2,.8,.2,1) both}
+.toast.out{animation:tout .15s ease-in both}
+.toast.warn{border-left-color:var(--accent2);color:var(--accent2)}
+.toast.bad{border-left-color:var(--bad);color:#ff8a8a}
+.toast.ok{border-left-color:var(--ok);color:var(--ok)}
+@keyframes tin{from{transform:translateX(-105%);opacity:.2}to{transform:none;opacity:1}}
+@keyframes tout{to{transform:translateX(-105%);opacity:0}}
+@keyframes tfade{from{opacity:0}to{opacity:1}}
+@keyframes tfadeo{to{opacity:0}}
+@media(prefers-reduced-motion:reduce){.toast{animation-name:tfade}.toast.out{animation-name:tfadeo}}
 #cd{position:absolute;left:0;right:0;top:28%;text-align:center;font-size:140px;font-weight:700;text-shadow:0 4px 24px #000;line-height:1}
 #vig{position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 45%,rgba(0,0,0,.7) 100%);opacity:0}
 #bars{position:absolute;left:18px;bottom:16px;display:flex;gap:10px}
@@ -72,7 +77,7 @@ kbd{font-family:var(--font);font-weight:700;min-width:26px;text-align:center;pad
 .bar:nth-child(2) i u{background:var(--cyan)}
 .bar:nth-child(3) i u,.bar:nth-child(4) i u{background:var(--bad)}
 .bar kbd{font-size:11px}
-#gauge{position:absolute;right:14px;bottom:12px;width:420px;height:250px;max-width:60vw;max-height:36vw}
+#gauge{position:absolute;right:14px;bottom:12px;width:300px;height:140px;max-width:64vw}
 #hint{position:absolute;left:50%;top:8px;transform:translateX(-50%);font-size:13px;color:#cfd6e3;text-shadow:0 1px 6px #000;text-align:center;max-width:calc(100% - 360px);transition:opacity 1s}
 .ov{background:rgba(5,7,11,.72);align-items:center;justify-content:center}
 .box{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px 26px;width:min(620px,94%);max-height:94%;overflow:auto;display:flex;flex-direction:column;gap:12px}
@@ -103,12 +108,12 @@ body.touch #touch{display:block}
 #tUtil .tb{position:static;width:auto;height:calc(var(--u)*.6);font-size:calc(var(--u)*.2);border-radius:10px}
 #tPause{right:calc(var(--sr) + 108px);top:8px;width:46px;height:34px;font-size:15px}
 body.touch #bars,body.touch #hint{display:none}
-body.touch #gauge{left:50%;right:auto;bottom:auto;top:4px;transform:translateX(-50%);width:200px;height:119px;max-width:none;max-height:none}
+body.touch #gauge{left:50%;right:auto;bottom:auto;top:4px;transform:translateX(-50%);width:250px;height:117px;max-width:none}
 body.touch #mini{width:96px;height:96px;top:8px;right:var(--sr,14px)}
 body.touch #hTL{top:6px;left:max(14px,env(safe-area-inset-left,0px))}
 body.touch #hLap{font-size:20px}body.touch #hTime{font-size:19px}body.touch #hSub{font-size:12px}body.touch #hGap{font-size:16px}body.touch #hMode{font-size:10px}
-body.touch #toasts{top:128px}
-body.touch .toast{font-size:15px;padding:4px 10px}
+body.touch #toasts{top:104px;left:0}
+body.touch .toast{font-size:13px;padding:3px 10px 3px 8px;padding-left:max(8px,var(--sl))}
 body.touch #cd{font-size:90px;top:32%}
 #rotate{display:none;z-index:40;font-size:26px;text-align:center;padding:30px}
 @media(orientation:portrait){body.touch.playing #rotate{display:flex}}
@@ -207,7 +212,7 @@ body.touch #board div{font-size:12px;padding:1px 6px}
     <div class="bar"><i><u id="bFb"></u></i>F.BRK<kbd>S</kbd></div>
     <div class="bar"><i><u id="bRb"></u></i>R.BRK<kbd>Space</kbd></div>
   </div>
-  <canvas id="gauge" width="840" height="500"></canvas>
+  <canvas id="gauge" width="600" height="280"></canvas>
   <div id="touch">
     <button class="tb" id="tL" data-k="KeyA" data-h="1">◀</button>
     <button class="tb" id="tR" data-k="KeyD" data-h="1">▶</button>
@@ -814,7 +819,13 @@ const diffs=[{n:'Easy',k:.86},{n:'Normal',k:.96},{n:'Hard',k:1.05}];
 try{bestStore=JSON.parse(localStorage.getItem('apexRider.best')||'{}')||{};}catch(e){bestStore={};}
 function saveBest(){try{localStorage.setItem('apexRider.best',JSON.stringify(bestStore));}catch(e){}}
 
-function toast(msg,kind){const d=document.createElement('div');d.className='toast '+(kind||'');d.textContent=msg;const c=$('toasts');c.appendChild(d);while(c.children.length>3)c.removeChild(c.firstChild);setTimeout(()=>d.remove(),2400);}
+function toast(msg,kind){
+  const c=$('toasts'),last=c.lastElementChild;
+  if(last&&last.textContent===msg&&!last.classList.contains('out'))return;
+  const d=document.createElement('div');d.className='toast '+(kind||'');d.textContent=msg;c.appendChild(d);
+  while(c.children.length>3)c.removeChild(c.firstChild);
+  setTimeout(()=>{d.classList.add('out');setTimeout(()=>d.remove(),170);},kind==='bad'?2800:2300);
+}
 
 function freshPlayer(){
   const spec=Pl.spec;
@@ -1233,37 +1244,47 @@ function drawMini(){
   dot(Pl.x,Pl.z,'#ff5a1f',9);
 }
 function rr(g,x,y,w,h,r){g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath();}
+function chip(g,x,y,w,txt,on,col){
+  g.strokeStyle=on?col:'rgba(255,255,255,.16)';g.lineWidth=1;rr(g,x,y,w,15,5);g.stroke();
+  if(on){g.globalAlpha=.16;g.fillStyle=col;g.fill();g.globalAlpha=1;}
+  g.fillStyle=on?col:'rgba(255,255,255,.32)';g.font='700 10px Rajdhani,sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText(txt,x+w/2,y+8.5);g.textBaseline='alphabetic';
+}
+function arrow(g,x,y,dir,on){
+  g.fillStyle=on?'#3ddc84':'rgba(255,255,255,.16)';g.beginPath();
+  if(dir<0){g.moveTo(x+10,y);g.lineTo(x,y+7);g.lineTo(x+10,y+14);}else{g.moveTo(x,y);g.lineTo(x+10,y+7);g.lineTo(x,y+14);}
+  g.closePath();g.fill();
+}
 function drawGauge(){
-  const g=gctx,sp=Pl.spec;g.clearRect(0,0,420,250);
-  g.fillStyle='rgba(8,10,15,.62)';rr(g,0,0,420,250,18);g.fill();
-  const cx=125,cy=128,r=96,a0=.75*PI,sw=1.5*PI,maxR=Math.ceil(sp.red*1.08/1000)*1000;
-  g.lineWidth=3;g.strokeStyle='rgba(255,255,255,.14)';g.beginPath();g.arc(cx,cy,r,a0,a0+sw);g.stroke();
-  g.strokeStyle='#ff4d4d';g.lineWidth=5;g.beginPath();g.arc(cx,cy,r,a0+sw*sp.red/maxR,a0+sw);g.stroke();
-  g.font='600 13px Rajdhani,sans-serif';g.textAlign='center';g.textBaseline='middle';
-  for(let k=0;k*500<=maxR;k++){const v=k*500,a=a0+sw*v/maxR,maj=v%1000===0,c=Math.cos(a),s=Math.sin(a);
-    g.strokeStyle=v>=sp.red?'#ff4d4d':'rgba(255,255,255,.7)';g.lineWidth=maj?2.5:1.2;g.beginPath();g.moveTo(cx+c*(r-(maj?13:7)),cy+s*(r-(maj?13:7)));g.lineTo(cx+c*r,cy+s*r);g.stroke();
-    if(maj){g.fillStyle='#cfd6e3';g.fillText(String(v/1000),cx+c*(r-26),cy+s*(r-26));}}
-  const na=a0+sw*clamp(Pl.rpm/maxR,0,1);
-  g.strokeStyle='#ff5a1f';g.lineWidth=4;g.lineCap='round';g.beginPath();g.moveTo(cx-Math.cos(na)*12,cy-Math.sin(na)*12);g.lineTo(cx+Math.cos(na)*(r-8),cy+Math.sin(na)*(r-8));g.stroke();g.lineCap='butt';
-  g.fillStyle='#10131a';g.beginPath();g.arc(cx,cy,26,0,TAU);g.fill();
-  g.fillStyle='#8791a3';g.font='600 10px Rajdhani,sans-serif';g.fillText('GEAR',cx,cy-14);
-  g.fillStyle=Pl.gear===0?'#3ddc84':'#fff';g.font='700 34px Rajdhani,sans-serif';g.fillText(Pl.gear===0?'N':String(Pl.gear),cx,cy+6);
-  g.fillStyle='#8791a3';g.font='600 11px Rajdhani,sans-serif';g.fillText('x1000 RPM',cx,cy+r-34);
+  const g=gctx,sp=Pl.spec;g.clearRect(0,0,300,140);g.textBaseline='alphabetic';
+  g.fillStyle='rgba(8,10,15,.58)';rr(g,0,0,300,140,14);g.fill();
+  g.strokeStyle='rgba(255,255,255,.1)';g.lineWidth=1;rr(g,.5,.5,299,139,14);g.stroke();
+  // segmented rev bar
+  const maxR=Math.ceil(sp.red*1.08/1000)*1000,N=28,bw=(272-27*2)/N,lit=Math.round(clamp(Pl.rpm/maxR,0,1)*N),redI=Math.floor(sp.red/maxR*N);
+  for(let i=0;i<N;i++){g.fillStyle=i<lit?(i>=redI?'#ff3b3b':(i>redI-5?'#ffb020':'#ff5a1f')):'rgba(255,255,255,.1)';g.fillRect(14+i*(bw+2),14,bw,11);}
+  g.fillStyle='rgba(255,255,255,.5)';g.font='600 9px Rajdhani,sans-serif';g.textAlign='center';
+  for(let k=0;k*2000<=maxR;k++)g.fillText(String(k*2),14+(k*2000/maxR)*272,37);
   // speed
   const spd=Pl.v*(S.units==='kmh'?3.6:2.23694);
-  g.textAlign='center';g.fillStyle='#fff';g.font='700 70px Rajdhani,sans-serif';g.fillText(String(Math.round(spd)),320,84);
-  g.fillStyle='#ffb020';g.font='600 16px Rajdhani,sans-serif';g.fillText(S.units==='kmh'?'KM/H':'MPH',320,118);
-  g.fillStyle='#8791a3';g.font='600 13px Rajdhani,sans-serif';g.fillText('ODO '+(Pl.odo/(S.units==='kmh'?1000:1609.34)).toFixed(2)+(S.units==='kmh'?' km':' mi'),320,138);
-  // lamps
+  g.textAlign='left';g.fillStyle='#fff';g.font='700 54px Rajdhani,sans-serif';g.fillText(String(Math.round(spd)),14,92);
+  g.fillStyle='#ffb020';g.font='700 11px Rajdhani,sans-serif';g.fillText(S.units==='kmh'?'KM/H':'MPH',16,106);
+  // centre readout
+  if(Pl.rpm>=sp.red*.97&&Pl.engineOn){g.fillStyle='#ff4d4d';g.font='700 15px Rajdhani,sans-serif';g.fillText('REV LIMIT',140,66);}
+  else if(Pl.spin){g.fillStyle='#ffb020';g.font='700 15px Rajdhani,sans-serif';g.fillText('WHEELSPIN',140,66);}
+  else{g.fillStyle='#cfd6e3';g.font='600 15px Rajdhani,sans-serif';g.fillText((Pl.rpm/1000).toFixed(1)+' k rpm',140,66);}
+  g.fillStyle='#8791a3';g.font='600 11px Rajdhani,sans-serif';
+  g.fillText(Pl.auto?'AUTO GEARBOX':'MANUAL + CLUTCH',140,83);
+  g.fillText('ODO '+(Pl.odo/(S.units==='kmh'?1000:1609.34)).toFixed(1)+(S.units==='kmh'?' km':' mi'),140,98);
+  // gear
+  g.strokeStyle=Pl.gear===0?'#3ddc84':'rgba(255,255,255,.35)';g.lineWidth=1.5;rr(g,226,44,60,60,10);g.stroke();
+  g.textAlign='center';g.fillStyle='#8791a3';g.font='600 9px Rajdhani,sans-serif';g.fillText('GEAR',256,56);
+  g.fillStyle=Pl.gear===0?'#3ddc84':'#fff';g.font='700 40px Rajdhani,sans-serif';g.fillText(Pl.gear===0?'N':String(Pl.gear),256,96);
+  // status row
   const blink=(performance.now()%700)<350;
-  const lamp=(x,txt,on,col)=>{g.fillStyle=on?col:'rgba(255,255,255,.12)';g.font='700 14px Rajdhani,sans-serif';g.fillText(txt,x,168);};
-  lamp(240,'◀',(Pl.indL||Pl.haz)&&blink,'#3ddc84');lamp(268,'ENG',Pl.engineOn,'#3ddc84');lamp(300,'LIGHT',Pl.light,'#6fe3ff');lamp(340,'AUTO',Pl.auto,'#ffb020');lamp(378,'▶',(Pl.indR||Pl.haz)&&blink,'#3ddc84');
-  if(Pl.rpm>=sp.red*.97&&Pl.engineOn){g.fillStyle='#ff4d4d';g.font='700 14px Rajdhani,sans-serif';g.fillText('REV LIMIT',320,190);}
-  else if(Pl.spin){g.fillStyle='#ffb020';g.font='700 14px Rajdhani,sans-serif';g.fillText('WHEELSPIN',320,190);}
-  // clutch bar
-  g.fillStyle='#8791a3';g.font='600 11px Rajdhani,sans-serif';g.textAlign='left';g.fillText('CLUTCH',236,214);
-  g.fillStyle='rgba(255,255,255,.1)';g.fillRect(286,208,120,10);g.fillStyle=Pl.clutch<.4?'#6fe3ff':'#3ddc84';g.fillRect(286,208,120*Pl.clutch,10);
-  g.fillStyle='#8791a3';g.fillText(Pl.auto?'AUTO GEARBOX':'MANUAL GEARBOX',236,234);
+  arrow(g,14,114,-1,(Pl.indL||Pl.haz)&&blink);
+  chip(g,32,113,32,'ENG',Pl.engineOn,'#3ddc84');chip(g,68,113,40,'LIGHT',Pl.light,'#6fe3ff');
+  g.textAlign='left';g.fillStyle='#8791a3';g.font='600 10px Rajdhani,sans-serif';g.fillText('CLUTCH',118,124);
+  g.fillStyle='rgba(255,255,255,.12)';g.fillRect(160,117,66,7);g.fillStyle=Pl.clutch<.4?'#6fe3ff':'#3ddc84';g.fillRect(160,117,66*Pl.clutch,7);
+  arrow(g,276,114,1,(Pl.indR||Pl.haz)&&blink);
 }
 const tAuto=$('tAuto'),tCl=$('tCl'),tGu=$('tGu'),tGd=$('tGd'),tIl=$('tIl'),tIr=$('tIr'),tHaz=$('tHaz'),tLamp=$('tLamp'),tIgn=$('tIgn');
 function updateTouchHUD(){

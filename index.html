@@ -1,4 +1,5 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no"><meta name="theme-color" content="#0a0c11">
+<meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' wss://apex-rider-relay.racinggame.workers.dev; object-src 'none'; base-uri 'none'">
 <title>Apex Rider</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -90,31 +91,35 @@ kbd{font-family:var(--font);font-weight:700;min-width:26px;text-align:center;pad
 
 /* ===== touch edition ===== */
 html,body{overscroll-behavior:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
-#touch{display:none;--u:clamp(46px,15vh,76px);--sl:max(14px,env(safe-area-inset-left,0px));--sr:max(14px,env(safe-area-inset-right,0px));--sb:max(12px,env(safe-area-inset-bottom,0px))}
+body{--sl:max(12px,env(safe-area-inset-left,0px));--sr:max(12px,env(safe-area-inset-right,0px));--sb:max(8px,env(safe-area-inset-bottom,0px))}
+#touch{display:none;--u:clamp(38px,11.5vh,58px)}
 body.touch #touch{display:block}
-.tb{position:absolute;pointer-events:auto;touch-action:none;user-select:none;-webkit-user-select:none;display:flex;align-items:center;justify-content:center;text-align:center;border-radius:14px;background:rgba(14,17,24,.5);border:1px solid rgba(255,255,255,.25);color:#fff;font:700 calc(var(--u)*.3)/1.05 var(--font);letter-spacing:.05em;backdrop-filter:blur(2px)}
-.tb.on{background:rgba(255,90,31,.72);border-color:#ff9a6a}
+.tb{position:absolute;pointer-events:auto;touch-action:none;user-select:none;-webkit-user-select:none;display:flex;align-items:center;justify-content:center;padding:0;border-radius:calc(var(--u)*.3);background:rgba(14,17,24,.34);border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.92);backdrop-filter:blur(2px)}
+.tb svg{width:54%;height:54%;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
+.tb svg .f{fill:currentColor;stroke:none}
+.tb b{font:700 calc(var(--u)*.46)/1 var(--font);pointer-events:none}
+.tb.on{background:rgba(255,90,31,.6);border-color:#ff9a6a}
 .tb.act{border-color:var(--ok);color:var(--ok)}
-.tb.dim{opacity:.32}
-#tL{left:var(--sl);bottom:var(--sb);width:calc(var(--u)*1.7);height:calc(var(--u)*1.5);font-size:calc(var(--u)*.6)}
-#tR{left:calc(var(--sl) + var(--u)*1.7 + 10px);bottom:var(--sb);width:calc(var(--u)*1.7);height:calc(var(--u)*1.5);font-size:calc(var(--u)*.6)}
-#tCl{left:var(--sl);bottom:calc(var(--sb) + var(--u)*1.5 + 10px);width:calc(var(--u)*3.4 + 10px);height:calc(var(--u)*.8);border-color:rgba(111,227,255,.6)}
-#tTh{right:var(--sr);bottom:var(--sb);width:calc(var(--u)*1.6);height:calc(var(--u)*2);background:rgba(255,90,31,.32);border-color:rgba(255,140,90,.7)}
-#tFb{right:calc(var(--sr) + var(--u)*1.6 + 10px);bottom:var(--sb);width:calc(var(--u)*1.25);height:calc(var(--u)*1.1);font-size:calc(var(--u)*.2);border-color:rgba(255,77,77,.6)}
-#tRb{right:calc(var(--sr) + var(--u)*1.6 + 10px);bottom:calc(var(--sb) + var(--u)*1.1 + 10px);width:calc(var(--u)*1.25);height:calc(var(--u)*.8);font-size:calc(var(--u)*.2);border-color:rgba(255,77,77,.6)}
-#tGu{right:var(--sr);bottom:calc(var(--sb) + var(--u)*2 + 10px);width:calc(var(--u)*.8);height:calc(var(--u)*.8)}
-#tGd{right:calc(var(--sr) + var(--u)*.8 + 8px);bottom:calc(var(--sb) + var(--u)*2 + 10px);width:calc(var(--u)*.8);height:calc(var(--u)*.8)}
-#tUtil{position:absolute;left:50%;transform:translateX(-50%);bottom:var(--sb);display:grid;grid-template-columns:repeat(5,calc(var(--u)*.74));gap:6px}
-#tUtil .tb{position:static;width:auto;height:calc(var(--u)*.6);font-size:calc(var(--u)*.2);border-radius:10px}
-#tPause{right:calc(var(--sr) + 108px);top:8px;width:46px;height:34px;font-size:15px}
-body.touch #bars,body.touch #hint{display:none}
-body.touch #gauge{left:50%;right:auto;bottom:auto;top:4px;transform:translateX(-50%);width:250px;height:117px;max-width:none}
-body.touch #mini{width:96px;height:96px;top:8px;right:var(--sr,14px)}
-body.touch #hTL{top:6px;left:max(14px,env(safe-area-inset-left,0px))}
-body.touch #hLap{font-size:20px}body.touch #hTime{font-size:19px}body.touch #hSub{font-size:12px}body.touch #hGap{font-size:16px}body.touch #hMode{font-size:10px}
-body.touch #toasts{top:104px;left:0}
+.tb.hide{visibility:hidden;pointer-events:none}
+#tL{left:var(--sl);bottom:var(--sb);width:calc(var(--u)*1.45);height:calc(var(--u)*1.25)}
+#tR{left:calc(var(--sl) + var(--u)*1.45 + 8px);bottom:var(--sb);width:calc(var(--u)*1.45);height:calc(var(--u)*1.25)}
+#tCl{left:var(--sl);bottom:calc(var(--sb) + var(--u)*1.25 + 8px);width:calc(var(--u)*.95);height:calc(var(--u)*.95);border-radius:50%;border-color:rgba(111,227,255,.55);color:#9eeaff}
+#tTh{right:var(--sr);bottom:var(--sb);width:calc(var(--u)*1.3);height:calc(var(--u)*1.9);background:rgba(255,90,31,.26);border-color:rgba(255,140,90,.65);color:#ffb08a}
+#tFb{right:calc(var(--sr) + var(--u)*1.3 + 8px);bottom:var(--sb);width:calc(var(--u)*1.05);height:calc(var(--u)*1.05);border-radius:50%;border-color:rgba(255,95,95,.6);color:#ff9a9a}
+#tRb{right:calc(var(--sr) + var(--u)*1.3 + 8px + var(--u)*.075);bottom:calc(var(--sb) + var(--u)*1.05 + 8px);width:calc(var(--u)*.9);height:calc(var(--u)*.9);border-radius:50%;border-color:rgba(255,95,95,.45);color:#ff9a9a}
+#tGu{right:var(--sr);bottom:calc(var(--sb) + var(--u)*1.9 + 8px);width:calc(var(--u)*.8);height:calc(var(--u)*.8);border-radius:50%}
+#tGd{right:calc(var(--sr) + var(--u)*.8 + 6px);bottom:calc(var(--sb) + var(--u)*1.9 + 8px);width:calc(var(--u)*.8);height:calc(var(--u)*.8);border-radius:50%}
+#tUtil{position:absolute;left:50%;transform:translateX(-50%);bottom:var(--sb);display:flex;gap:6px}
+#tUtil .tb{position:static;width:calc(var(--u)*.88);height:calc(var(--u)*.88);border-radius:50%}
+#tPause{right:calc(var(--sr) + 92px);top:8px;width:36px;height:36px;border-radius:50%}
+body.touch #bars,body.touch #hint,body.touch #hMode,body.touch #hSub{display:none}
+body.touch #gauge{left:50%;right:auto;bottom:auto;top:4px;transform:translateX(-50%);width:190px;height:58px;max-width:none}
+body.touch #mini{width:84px;height:84px;top:8px;right:var(--sr,12px)}
+body.touch #hTL{top:6px;left:max(12px,env(safe-area-inset-left,0px))}
+body.touch #hLap{font-size:18px}body.touch #hTime{font-size:17px}body.touch #hGap{font-size:15px}
+body.touch #toasts{top:70px;left:0}
 body.touch .toast{font-size:13px;padding:3px 10px 3px 8px;padding-left:max(8px,var(--sl))}
-body.touch #cd{font-size:90px;top:32%}
+body.touch #cd{font-size:84px;top:30%}
 #rotate{display:none;z-index:40;font-size:26px;text-align:center;padding:30px}
 @media(orientation:portrait){body.touch.playing #rotate{display:flex}}
 body.touch .mpanel{touch-action:pan-y;-webkit-overflow-scrolling:touch}
@@ -214,26 +219,24 @@ body.touch #board div{font-size:12px;padding:1px 6px}
   </div>
   <canvas id="gauge" width="600" height="280"></canvas>
   <div id="touch">
-    <button class="tb" id="tL" data-k="KeyA" data-h="1">◀</button>
-    <button class="tb" id="tR" data-k="KeyD" data-h="1">▶</button>
-    <button class="tb" id="tCl" data-k="Shift" data-h="1">CLUTCH (hold)</button>
-    <button class="tb" id="tTh" data-k="KeyW" data-h="1">THROTTLE</button>
-    <button class="tb" id="tFb" data-k="KeyS" data-h="1">FRONT<br>BRAKE</button>
-    <button class="tb" id="tRb" data-k="Space" data-h="1">REAR</button>
-    <button class="tb" id="tGu" data-k="KeyE">▲</button>
-    <button class="tb" id="tGd" data-k="KeyQ">▼</button>
-    <button class="tb" id="tPause" data-k="KeyP">II</button>
+    <button class="tb" id="tL" data-k="KeyA" data-h="1" aria-label="Lean left"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <button class="tb" id="tR" data-k="KeyD" data-h="1" aria-label="Lean right"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
+    <button class="tb" id="tCl" data-k="Shift" data-h="1" aria-label="Clutch (hold)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19c7 0 11-5 15-13"/><path d="M4 19v-4"/><circle class="f" cx="19.5" cy="5" r="2"/></svg></button>
+    <button class="tb" id="tTh" data-k="KeyW" data-h="1" aria-label="Throttle"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12l6-6 6 6"/><path d="M6 19l6-6 6 6"/></svg></button>
+    <button class="tb" id="tFb" data-k="KeyS" data-h="1" aria-label="Front brake"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5v3M12 17.5v3M3.5 12h3M17.5 12h3"/><text class="f" x="12" y="15.6" font-size="9.5" font-weight="700" text-anchor="middle" font-family="Rajdhani,sans-serif">F</text></svg></button>
+    <button class="tb" id="tRb" data-k="Space" data-h="1" aria-label="Rear brake"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><text class="f" x="12" y="15.6" font-size="9.5" font-weight="700" text-anchor="middle" font-family="Rajdhani,sans-serif">R</text></svg></button>
+    <button class="tb" id="tGu" data-k="KeyE" aria-label="Gear up"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg></button>
+    <button class="tb" id="tGd" data-k="KeyQ" aria-label="Gear down"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+    <button class="tb" id="tPause" data-k="KeyP" aria-label="Pause"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 5v14M15.5 5v14"/></svg></button>
     <div id="tUtil">
-      <button class="tb" id="tIgn" data-k="KeyI">START</button>
-      <button class="tb" data-k="KeyH" data-h="1">HORN</button>
-      <button class="tb" id="tLamp" data-k="KeyL">LIGHT</button>
-      <button class="tb" id="tIl" data-k="KeyZ">◁</button>
-      <button class="tb" id="tHaz" data-k="KeyX">HAZ</button>
-      <button class="tb" id="tIr" data-k="KeyC">▷</button>
-      <button class="tb" data-k="KeyV">CAM</button>
-      <button class="tb" data-k="KeyR">RESET</button>
-      <button class="tb" id="tAuto" data-k="KeyT">AUTO</button>
-      <button class="tb" data-k="KeyM">MUTE</button>
+    <button class="tb" id="tIgn" data-k="KeyI" aria-label="Engine start or stop"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v8"/><path d="M6.6 6.6a8 8 0 1 0 10.8 0"/></svg></button>
+    <button class="tb" id="tLamp" data-k="KeyL" aria-label="Headlight"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.4"/><path d="M12 3v2.4M12 18.6V21M3 12h2.4M18.6 12H21M5.6 5.6l1.7 1.7M16.7 16.7l1.7 1.7M18.4 5.6l-1.7 1.7M7.3 16.7l-1.7 1.7"/></svg></button>
+    <button class="tb" id="tHorn" data-k="KeyH" data-h="1" aria-label="Horn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10v4h3l6 4V6L7 10z"/><path d="M16.2 9a4.2 4.2 0 0 1 0 6M18.8 6.4a8 8 0 0 1 0 11.2"/></svg></button>
+    <button class="tb" id="tHaz" data-k="KeyX" aria-label="Hazard lights"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4l9 16H3z"/><path d="M12 10v4"/><circle class="f" cx="12" cy="17" r=".9"/></svg></button>
+    <button class="tb" id="tCam" data-k="KeyV" aria-label="Camera"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-2h6l2 2h3v11H4z"/><circle cx="12" cy="13" r="3.2"/></svg></button>
+    <button class="tb" id="tRst" data-k="KeyR" aria-label="Reset to road"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12a7 7 0 1 0 2.2-5.1"/><path d="M5 4.5v4.5h4.5"/></svg></button>
+    <button class="tb" id="tAuto" data-k="KeyT" aria-label="Automatic or manual gearbox"><b>A</b></button>
+    <button class="tb" id="tMute" data-k="KeyM" aria-label="Mute"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10v4h3l5 4V6L7 10z"/><path d="M16 9.5a4 4 0 0 1 0 5"/></svg></button>
     </div>
   </div>
   <div id="hint">A / D lean · W throttle · S front brake · Space rear brake · hold Shift = clutch · E gear up · Q gear down · P pause</div>
@@ -1202,7 +1205,7 @@ document.querySelectorAll('#touch [data-k]').forEach(b=>{
   const rel=()=>{b.classList.remove('on');if(hold){down.delete(code);if(code===KEYS.horn)Snd.horn(false);}};
   ['pointerup','pointercancel','lostpointercapture'].forEach(ev=>b.addEventListener(ev,rel));
 });
-const touchHelp='<div class="thelp"><b>Left thumb:</b> ◀ ▶ lean and steer. <b>CLUTCH</b> (hold) for manual gears.<br><b>Right thumb:</b> THROTTLE, FRONT BRAKE, REAR brake, ▲ ▼ gear up / down.<br><b>Auto gearbox</b> is on by default: tap AUTO to switch to manual (clutch + ▲▼). Row at the bottom: START/STOP engine, HORN, LIGHT, indicators, hazards, camera, reset to road, mute. II pauses.</div>';
+const touchHelp='<div class="thelp"><b>Left thumb:</b> arrows lean and steer. <b>Right thumb:</b> double arrow = throttle, F disc = front brake, R disc = rear brake.<br><b>Bottom row:</b> power (engine), sun (light), horn, warning triangle (hazards), camera, reset to road, A/M (auto or manual gearbox), speaker (mute). Manual mode also shows the clutch lever and gear up/down arrows.<br><b>Tip:</b> for a bigger, full-screen view, add the game to your Home Screen from the browser share menu.</div>';
 /* ================= CAMERA ================= */
 const cam={hd:0,pos:new THREE.Vector3(),init:false},_cw=V(0,0,0),_cl=V(0,0,0);
 function updateCamera(dt){
@@ -1226,7 +1229,9 @@ function updateCamera(dt){
 }
 
 /* ================= HUD ================= */
-const gctx=$('gauge').getContext('2d');gctx.scale(2,2);
+const gctx=$('gauge').getContext('2d');
+function sizeGauge(){const c=$('gauge');c.width=TOUCH?380:600;c.height=TOUCH?116:280;gctx.setTransform(2,0,0,2,0,0);}
+sizeGauge();
 const mctx=$('mini').getContext('2d');let miniBG=null,miniT=null;
 function buildMini(){
   const cv=document.createElement('canvas');cv.width=cv.height=300;const g=cv.getContext('2d');
@@ -1254,7 +1259,22 @@ function arrow(g,x,y,dir,on){
   if(dir<0){g.moveTo(x+10,y);g.lineTo(x,y+7);g.lineTo(x+10,y+14);}else{g.moveTo(x,y);g.lineTo(x+10,y+7);g.lineTo(x,y+14);}
   g.closePath();g.fill();
 }
+function drawGaugeMini(){
+  const g=gctx,sp=Pl.spec;g.clearRect(0,0,190,58);g.textBaseline='alphabetic';
+  g.fillStyle='rgba(8,10,15,.5)';rr(g,0,0,190,58,12);g.fill();
+  const maxR=Math.ceil(sp.red*1.08/1000)*1000,N=22,bw=(174-21*1.5)/N,lit=Math.round(clamp(Pl.rpm/maxR,0,1)*N),redI=Math.floor(sp.red/maxR*N);
+  for(let i=0;i<N;i++){g.fillStyle=i<lit?(i>=redI?'#ff3b3b':(i>redI-4?'#ffb020':'#ff5a1f')):'rgba(255,255,255,.12)';g.fillRect(8+i*(bw+1.5),6,bw,6);}
+  const spd=Pl.v*(S.units==='kmh'?3.6:2.23694);
+  g.textAlign='left';g.fillStyle='#fff';g.font='700 32px Rajdhani,sans-serif';g.fillText(String(Math.round(spd)),9,46);
+  g.fillStyle='#ffb020';g.font='700 9px Rajdhani,sans-serif';g.fillText(S.units==='kmh'?'KM/H':'MPH',10,55);
+  g.font='700 12px Rajdhani,sans-serif';
+  if(Pl.rpm>=sp.red*.97&&Pl.engineOn){g.fillStyle='#ff4d4d';g.fillText('REV',92,38);}
+  else if(Pl.spin){g.fillStyle='#ffb020';g.fillText('SLIP',92,38);}
+  g.strokeStyle=Pl.gear===0?'#3ddc84':'rgba(255,255,255,.35)';g.lineWidth=1.5;rr(g,142,18,40,34,8);g.stroke();
+  g.textAlign='center';g.fillStyle=Pl.gear===0?'#3ddc84':'#fff';g.font='700 26px Rajdhani,sans-serif';g.fillText(Pl.gear===0?'N':String(Pl.gear),162,44);
+}
 function drawGauge(){
+  if(TOUCH){drawGaugeMini();return;}
   const g=gctx,sp=Pl.spec;g.clearRect(0,0,300,140);g.textBaseline='alphabetic';
   g.fillStyle='rgba(8,10,15,.58)';rr(g,0,0,300,140,14);g.fill();
   g.strokeStyle='rgba(255,255,255,.1)';g.lineWidth=1;rr(g,.5,.5,299,139,14);g.stroke();
@@ -1286,11 +1306,11 @@ function drawGauge(){
   g.fillStyle='rgba(255,255,255,.12)';g.fillRect(160,117,66,7);g.fillStyle=Pl.clutch<.4?'#6fe3ff':'#3ddc84';g.fillRect(160,117,66*Pl.clutch,7);
   arrow(g,276,114,1,(Pl.indR||Pl.haz)&&blink);
 }
-const tAuto=$('tAuto'),tCl=$('tCl'),tGu=$('tGu'),tGd=$('tGd'),tIl=$('tIl'),tIr=$('tIr'),tHaz=$('tHaz'),tLamp=$('tLamp'),tIgn=$('tIgn');
+const tAuto=$('tAuto'),tCl=$('tCl'),tGu=$('tGu'),tGd=$('tGd'),tHaz=$('tHaz'),tLamp=$('tLamp'),tIgn=$('tIgn');
 function updateTouchHUD(){
-  tAuto.classList.toggle('act',Pl.auto);[tCl,tGu,tGd].forEach(b=>b.classList.toggle('dim',Pl.auto));
-  tIl.classList.toggle('act',Pl.indL);tIr.classList.toggle('act',Pl.indR);tHaz.classList.toggle('act',Pl.haz);tLamp.classList.toggle('act',Pl.light);
-  tIgn.textContent=Pl.engineOn?'STOP':'START';tIgn.classList.toggle('act',Pl.engineOn);}
+  tAuto.classList.toggle('act',Pl.auto);tAuto.firstElementChild.textContent=Pl.auto?'A':'M';
+  [tCl,tGu,tGd].forEach(b=>b.classList.toggle('hide',Pl.auto));
+  tHaz.classList.toggle('act',Pl.haz);tLamp.classList.toggle('act',Pl.light);tIgn.classList.toggle('act',Pl.engineOn);}
 function updateHUD(){
   if(TOUCH)updateTouchHUD();
   $('vig').style.opacity=(sstep(35,80,Pl.v)*.85).toFixed(2);
@@ -1342,7 +1362,7 @@ function refreshMenu(){
   showMenuBike();
 }
 function ctrlHTML(){return CTRL_DOC.map(g=>'<h3>'+g[0]+'</h3>'+g[1].map(r=>'<div><kbd>'+r[0]+'</kbd>'+r[1]+'</div>').join('')).join('');}
-function setTouch(on){TOUCH=on;document.body.classList.toggle('touch',on);if(on)S.auto=true;$('ctrlGrid').innerHTML=on?touchHelp:ctrlHTML();$('ctrlGrid2').innerHTML=on?touchHelp:ctrlHTML();$('subLine').textContent=on?'3D motorcycle riding · touch controls · landscape':'3D motorcycle riding · keyboard controls';}
+function setTouch(on){TOUCH=on;document.body.classList.toggle('touch',on);sizeGauge();if(on)S.auto=true;$('ctrlGrid').innerHTML=on?touchHelp:ctrlHTML();$('ctrlGrid2').innerHTML=on?touchHelp:ctrlHTML();$('subLine').textContent=on?'3D motorcycle riding · touch controls · landscape':'3D motorcycle riding · keyboard controls';}
 setTouch(TOUCH);
 window.addEventListener('pointerdown',e=>{if(e.pointerType==='touch'&&!TOUCH){setTouch(true);if(S.state==='menu')refreshMenu();}},true);
 $('startBtn').onclick=startGame;

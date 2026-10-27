@@ -3,3 +3,9 @@ node_modules/
 .DS_Store
 .vercel/
 test*.html
+
+# Claude Code Game Studios (local tooling)
+.claude/
+CLAUDE.md
+project.yaml
+project.local.yaml

@@ -211,6 +211,8 @@
 
   /* ================= ATMOSPHERE ================= */
   function atmosphere(ctx){
+    // at night the game sets the night sky, sun and fog, so the golden-hour overrides below are skipped
+    if(ctx.st&&ctx.st.night)return;
     const sky=ctx.sky,u=sky&&sky.material&&sky.material.uniforms;
     if(u){
       sky.material.fragmentShader=
@@ -771,7 +773,7 @@
     });
     const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(pos),3));
     g.setAttribute('color',new THREE.BufferAttribute(new Float32Array(col),3));g.setIndex(idx);g.computeBoundingSphere();
-    const m=new THREE.Mesh(g,new THREE.MeshBasicMaterial({vertexColors:true,side:THREE.DoubleSide,fog:false}));m.frustumCulled=false;ctx.grp.add(m);
+    const m=new THREE.Mesh(g,new THREE.MeshBasicMaterial({vertexColors:true,side:THREE.DoubleSide,fog:false}));m.frustumCulled=false;m.userData.sky=true;ctx.grp.add(m);
     // streaky warm clouds on the horizon
     const cv=document.createElement('canvas');cv.width=512;cv.height=128;const c2=cv.getContext('2d'),r=kit.mulberry(3);
     for(let i=0;i<26;i++){const x=40+r()*430,y=30+r()*70,rx=30+r()*90,ry=6+r()*14;
@@ -787,7 +789,7 @@
     }
     const cg=new THREE.BufferGeometry();cg.setAttribute('position',new THREE.BufferAttribute(new Float32Array(cp),3));cg.setAttribute('uv',new THREE.BufferAttribute(new Float32Array(cuv),2));
     cg.setAttribute('color',new THREE.BufferAttribute(new Float32Array(cc),3));cg.setIndex(ci);cg.computeBoundingSphere();
-    const cm=new THREE.Mesh(cg,new THREE.MeshBasicMaterial({map:ct,vertexColors:true,transparent:true,depthWrite:false,fog:false,side:THREE.DoubleSide}));cm.frustumCulled=false;ctx.grp.add(cm);
+    const cm=new THREE.Mesh(cg,new THREE.MeshBasicMaterial({map:ct,vertexColors:true,transparent:true,depthWrite:false,fog:false,side:THREE.DoubleSide}));cm.frustumCulled=false;cm.userData.sky=true;ctx.grp.add(cm);
     // tint the built-in white clouds to golden-hour pink
     ctx.grp.traverse(o=>{if(o.isMesh&&o.material&&o.material.isMeshBasicMaterial&&o.material.transparent&&o.material.opacity===.85&&!o.material.map&&o.material.fog===false){o.material.color.setHex(0xffd9c2);}});
   }
@@ -818,7 +820,7 @@
   }
   function vehicle(kind,rng,kit){
     const g=new kit.THREE.Group(),vm=kit.vm,box=kit.box,cyl=kit.cyl,tyre=kit.tyreM,glass=kit.glassM;
-    const wheel=(x,z,r,w)=>cyl(g,tyre,r,r,w||.26,[x,r,z],[0,0,PI/2]);
+    const wheel=(x,z,r,w,hub)=>kit.addWheel(g,x,r,z,r,w||.26,hub);
     let hw,hl;
     if(kind==='hatch'){
       const c=vm(pickP(rng));hw=.9;hl=1.98;
@@ -851,12 +853,11 @@
       for(const sx of[-1,1]){wheel(sx*.9,2.0,.5,.3);wheel(sx*.9,-2.1,.5,.3);}
       lights(kit,g,.8,.85,2.96,-2.96);
     }else if(kind==='tractor'){
-      const c=vm([0xb5341f,0x2f7a3a,0x3c6db5,0xd9a521][(rng()*4)|0]),roof=vm(0xe0b040);hw=1.2;hl=1.85;
+      const cc=[0xb5341f,0x2f7a3a,0x3c6db5,0xd9a521][(rng()*4)|0],c=vm(cc),roof=vm(0xe0b040);hw=1.2;hl=1.85;
       box(g,c,.95,.85,1.7,[0,1.15,.95]);box(g,tyre,.7,.55,.05,[0,1.1,1.82]);box(g,tyre,.7,.4,3.0,[0,.9,.1]);
       box(g,c,1.1,.12,1.2,[0,1.3,-.7]);box(g,tyre,.5,.4,.45,[0,1.6,-.85]);
       for(const sx of[-1,1]){box(g,c,.45,.1,1.5,[sx*.95,1.75,-.85]);box(g,tyre,.06,1.3,.06,[sx*.55,2.2,-.8]);
-        cyl(g,tyre,.78,.78,.42,[sx*.98,.78,-.85],[0,0,PI/2]);cyl(g,c,.3,.3,.46,[sx*.98,.78,-.85],[0,0,PI/2]);
-        cyl(g,tyre,.42,.42,.28,[sx*.72,.42,1.15],[0,0,PI/2]);
+        wheel(sx*.98,-.85,.78,.42,cc);wheel(sx*.72,1.15,.42,.28,cc);
         box(g,kit.redL,.2,.15,.05,[sx*.9,1.75,-1.6]);box(g,kit.whiteL,.2,.16,.05,[sx*.3,1.35,1.83]);}
       box(g,roof,1.5,.07,1.6,[0,2.85,-.8]);cyl(g,tyre,.06,.06,.9,[.3,1.9,1.2]);
     }else{ // coach

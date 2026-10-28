@@ -279,7 +279,7 @@ function buildClouds(ctx,kit){
     lump(cx,cy,cz,260+rng()*220,10,30+rng()*30);
   }
   const m=new T.Mesh(toGeo(b,T),new T.MeshBasicMaterial({vertexColors:true,fog:false}));
-  m.frustumCulled=false;m.renderOrder=-.5;const grp=new T.Group();grp.add(m);ctx.grp.add(grp);
+  m.frustumCulled=false;m.renderOrder=-.5;m.userData.sky=true;const grp=new T.Group();grp.add(m);ctx.grp.add(grp);
   kit.addUpdater(dt=>{grp.rotation.y+=dt*.0022;});
   return grp;
 }
@@ -329,15 +329,9 @@ function bodyPts(o){
   pts.push([hl,o.lo]);for(const q of o.top)pts.push(q);
   return pts;
 }
-function cylXB(b,cx,cy,cz,r,w,seg,col){
-  const xl=cx-w/2,xr=cx+w/2,pa=a=>[cy+r*Math.cos(a),cz+r*Math.sin(a)];
-  for(let i=0;i<seg;i++){
-    const a0=i/seg*6.2832,a1=(i+1)/seg*6.2832,p0=pa(a0),p1=pa(a1);
-    const A=[xl,p0[0],p0[1]],B=[xr,p0[0],p0[1]],C=[xr,p1[0],p1[1]],D=[xl,p1[0],p1[1]];
-    quad(b,A,D,C,B,null,col);tri(b,[xr,cy,cz],B,C,null,null,null,col);tri(b,[xl,cy,cz],D,A,null,null,null,col);
-  }
-}
-function wheelsB(D,Lp,xs,zs,r,w){for(const x of xs)for(const z of zs){cylXB(D,x,r,z,r,w,12,null);const s=Math.sign(x);cylXB(Lp,x+s*(w/2-.005),r,z,r*.62,.03,10,[.62,.65,.7]);}}
+// wheels are drawn and rolled by the core (kit.addWheel); here they are only listed, per vehicle kind, in _WH
+let _WH=null;
+function wheelsB(D,Lp,xs,zs,r,w){for(const x of xs)for(const z of zs)_WH.push([x,r,z,r,w]);}
 function lampBox(Lp,cx,cy,cz,sx,sy,sz,hex){boxB(Lp,cx,cy-sy/2,cz,sx,sy,sz,0,hex2rgb(hex));}
 function plateB(Lp,z,y,front){boxB(Lp,0,y-.07,z,.5,.14,.02,0,[.92,.92,.88]);}
 /* horizontal tank along z with smooth normals; decal arcs (+/-) get uv from the livery cell */
@@ -446,17 +440,17 @@ function buildTruck(kind,kit){
     boxB(D,0,.4,6.23,2.3,.3,.12,0,null);boxB(D,0,.5,-6.28,2.3,.22,.1,0,null);
     for(const sd of[-1,1]){lampBox(Lp,sd*1.0,1.0,-6.3,.2,.2,.05,0xd01818);lampBox(Lp,sd*.85,1.0,6.24,.4,.14,.05,0xfff2c0);}
     for(let i=-2;i<=2;i++)boxB(D,i*.4,1.4,-6.07,.07,2.4,.04,0,null);
-    wheelsB(D,Lp,[-1.0,1.0],[5.3,3.8,-4.7,-5.8],.5,.32);hw=1.3;hl=6.2;
+    wheelsB(D,Lp,[-1.0,1.0],[5.3,3.8,-4.5,-5.6],.5,.32);hw=1.3;hl=6.2;
   }
   return{P,P2,G,D,Lp,Dc,hw,hl};
 }
 const VCACHE={};
 function vehGeo(kind,kit){
   if(VCACHE[kind])return VCACHE[kind];
-  const T=kit.THREE;let r;
+  const T=kit.THREE;let r;_WH=[];
   if(kind==='sedan')r=buildCar(SEDAN,{},kit);else if(kind==='taxi')r=buildCar(SEDAN,{taxi:1},kit);else if(kind==='police')r=buildCar(SEDAN,{police:1},kit);
   else if(kind==='hatch')r=buildCar(HATCH,{stripe:0},kit);else if(kind==='suv')r=buildCar(SUV,{},kit);else r=buildTruck(kind,kit);
-  const o={hw:r.hw,hl:r.hl};for(const k of['P','P2','G','D','Lp','Dc'])if(r[k]&&r[k].p.length)o[k]=toGeo(r[k],T);
+  const o={hw:r.hw,hl:r.hl,wh:_WH};for(const k of['P','P2','G','D','Lp','Dc'])if(r[k]&&r[k].p.length)o[k]=toGeo(r[k],T);
   return VCACHE[kind]=o;
 }
 function vehMats(kit){
@@ -474,6 +468,7 @@ function makeVehicle(kind,rng,kit){
   else if(kind==='container'){col=[0x1f4e9c,0x2b2f36,0xb3222a,0xe9ecef][(c1*4)|0];col2=0x1d4f91;}
   const g=new T.Group(),add=(geo,mat,sh)=>{if(!geo)return;const m=new T.Mesh(geo,mat);m.castShadow=!!sh;g.add(m);};
   add(V.P,kit.vm(col),true);add(V.P2,kit.vm(col2),true);add(V.G,kit.glassM);add(V.D,kit.tyreM);add(V.Lp,_lampM);add(V.Dc,_liveryM);
+  for(const w of V.wh)kit.addWheel(g,...w);
   return{obj:g,hw:V.hw,hl:V.hl};
 }
 

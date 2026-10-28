@@ -12,6 +12,8 @@ const STAGE_LAP = [4462.5, 3136.5, 1781, 2369.5];
 const STAGE_LAPS = [2, 2, 3, 2];
 const STAGE_MIN_TIME = [85, 100, 100, 63];
 const MAX_LAPS = 5;
+const DEFAULT_LAPS = 1; // lap count a new room starts with
+const DEFAULT_TRAFFIC = 1; // 0 low, 1 medium, 2 high: everyone in the room gets the same traffic
 const raceTotal = (stage, laps) => STAGE_LAP[stage] * laps;
 const raceMinTime = (stage, laps) => STAGE_MIN_TIME[stage] * laps / STAGE_LAPS[stage];
 const MAX_SPEED = 130;           // m/s: hard ceiling on reported progress growth
@@ -80,7 +82,7 @@ export class Room {
     this.tokens = new Map();  // secret token -> public id
     this.hostId = null;
     this.phase = 'lobby'; // lobby | loading | race
-    this.cfg = { stage: 0, laps: STAGE_LAPS[0] };
+    this.cfg = { stage: 0, laps: DEFAULT_LAPS, traffic: DEFAULT_TRAFFIC };
     this.loaded = new Set();
     this.finCount = 0;
     this.startAt = 0;
@@ -221,8 +223,9 @@ export class Room {
       case 'cfg':
         if (p.id === this.hostId && this.phase === 'lobby' && !this.limited(p, 'cfg', 4)) {
           const stage = Math.max(0, Math.min(STAGES - 1, m.stage | 0));
-          const laps = Number.isInteger(m.laps) ? Math.max(1, Math.min(MAX_LAPS, m.laps)) : STAGE_LAPS[stage];
-          this.cfg = { stage, laps };
+          const laps = Number.isInteger(m.laps) ? Math.max(1, Math.min(MAX_LAPS, m.laps)) : DEFAULT_LAPS;
+          const traffic = Number.isInteger(m.traffic) ? Math.max(0, Math.min(2, m.traffic)) : DEFAULT_TRAFFIC;
+          this.cfg = { stage, laps, traffic };
           this.pushPlayers();
         }
         break;
@@ -268,7 +271,7 @@ export class Room {
       if (!q.connected) { clearTimeout(q.graceT); this.players.delete(id); this.tokens.delete(q.tok); }
     }
     for (const q of this.players.values()) { q.fin = null; q.prog = 0; q.progAt = 0; }
-    this.broadcast({ t: 'prep', stage: this.cfg.stage, laps: this.cfg.laps, players: this.roster() });
+    this.broadcast({ t: 'prep', stage: this.cfg.stage, laps: this.cfg.laps, traffic: this.cfg.traffic, players: this.roster() });
     this.pushPlayers();
     clearTimeout(this.timer);
     this.timer = setTimeout(() => { if (this.phase === 'loading') this.goRace(); }, 25000);

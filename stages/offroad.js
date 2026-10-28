@@ -387,6 +387,8 @@ ApexKit.register('offroad',{
   atmosphere(ctx){
     const kit=ctx.kit,scene=ctx.scene,grp=ctx.grp,u=ctx.sky&&ctx.sky.material&&ctx.sky.material.uniforms;
     OB=null;VMAT=null;
+    // at night the game sets the night sky, sun and fog: skip the day colour overrides below
+    if(ctx.st&&ctx.st.night)return;
     if(u){u.top.value.setHex(0x3f93ee);u.hor.value.setHex(0xffe9c4);}
     if(scene.fog)scene.fog.color.setHex(0xf3d9ae);
     if(scene.background&&scene.background.setHex)scene.background.setHex(0xf3d9ae);

@@ -395,10 +395,12 @@ function vmats(kit){
 }
 const WOOD=[0,.26,1,.74],ENDT=[0,0,.25,.25];
 const pick=(r,a)=>a[(r()*a.length)|0];
-function VBk(){return{body:Bk(),wood:Bk(),glass:Bk(),tyre:Bk(),red:Bk(),white:Bk()};}
+function VBk(){return{body:Bk(),wood:Bk(),glass:Bk(),tyre:Bk(),red:Bk(),white:Bk(),wheels:[]};}
 function vfin(V,kit){const M=vmats(kit),g=new T.Group();
-  for(const k in V){if(!V[k].p.length)continue;const m=new T.Mesh(fin(V[k]),M[k]);m.castShadow=true;g.add(m);}return g;}
-const WH=(V,x,y,z,r,w,hub)=>{CY(V.tyre,r,r,w,12,x,y,z,0xffffff,0,0,PI/2,0);CY(V.body,r*.55,r*.55,w+.02,8,x,y,z,hub||0x7a5a3a,0,0,PI/2,.1);};
+  for(const k in V){if(k==='wheels'||!V[k].p.length)continue;const m=new T.Mesh(fin(V[k]),M[k]);m.castShadow=true;g.add(m);}
+  for(const w of V.wheels)kit.addWheel(g,...w);return g;}
+// wheels are drawn and rolled by the core (kit.addWheel); hub tints the rim
+const WH=(V,x,y,z,r,w,hub)=>{V.wheels.push([x,y,z,r,w,hub||0x7a5a3a]);};
 const WD=(V,x,y,z,len,r,col,rx,ry,rz)=>{CY(V.wood,r,r*.96,len,10,x,y,z,col,rx,ry,rz,.08,WOOD,true);};
 function logEnds(V,x,y,z,r,rot){ // end discs for a z-axis log
   put(V.wood,GEO('CircleGeometry',r,10),XF(x,y,z+rot*0,0,rot>0?0:PI,0),0xe0c690,.05,ENDT);}
@@ -738,7 +740,9 @@ ApexKit.register('jungle',{
     if(sa&&sa.e>0){const w=sstep(0,1,1-sa.q/9);cc.lerp(COL.wet,w*.8*sa.e);cc.lerp(COL.peb,sstep(.5,.9,1-sa.q/5)*.4*sa.e*b);}
   },
   atmosphere(ctx){
-    KIT=ctx.kit;const f=ctx.scene.fog;f.density=.0059;f.color.setHex(0xa2bba8);ctx.scene.background.setHex(0xa2bba8);
+    KIT=ctx.kit;
+    // at night the game sets the night sky, sun and fog: skip the day colour overrides below
+    if(ctx.st&&ctx.st.night)return;const f=ctx.scene.fog;f.density=.0059;f.color.setHex(0xa2bba8);ctx.scene.background.setHex(0xa2bba8);
     ctx.hemi.color.setHex(0xbcd8b4);ctx.hemi.groundColor.setHex(0x3c4a2a);ctx.hemi.intensity=.95;ctx.sunLight.color.setHex(0xf1f2c8);
     const u=ctx.sky.material.uniforms;if(u){u.top.value.setHex(0x6d9a8a);u.hor.value.setHex(0xa2bba8);}
   },

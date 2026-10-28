@@ -67,6 +67,7 @@ hairpins, chicanes and sweepers. Rules for the points you return:
 `vm(hex)` shared car-paint material, `glassM, tyreM, redL, whiteL, carWheels(g, w, l, r)`,
 `mergeByMaterial(group)` merges all direct child meshes of a group into one mesh per material,
 `inst(geometry, material, items)` builds an `InstancedMesh`; items are `{x,y,z,sx,sy,sz,ry,c}` (`c` = hex colour),
+`loopR` (number) largest distance of the road centre line from the origin. `polarR(th)` the loop radius at angle `th` (use it only for the coarse "inside/outside the loop" zoning; it follows the real loop, including custom ones). **Place scenery by the road, never by the old circle**: use `nearest(x,z).dist` / `.d` (distance and side from the centre line) and `pose(s, off)`; do not use `st.harm`, `st.R` or your own polar formula for where props, buildings or hills go.
 `pose(s, off)` returns a COPY `{x,y,z,hd}` of the road position `s` metres along the track, `off` metres to the
 right of the direction of travel, `nearest(x, z)` returns `{j,f,d,dist}` (`d` = signed lateral offset, `dist` = distance
 to the centre line), `terrainH(x, z)` ground height, `roadYAt(f)`, and getters `st, L, M, DS`

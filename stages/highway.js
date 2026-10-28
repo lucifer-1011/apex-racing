@@ -205,16 +205,18 @@ function buildRoadMarks(ctx,kit,rng){
 
 /* ---------- terrain ---------- */
 function terrainFeatFn(x,z,rho,dn,kit){
-  // closing ring of hills beyond the city loop (hides the edge of the world), fades in away from the road
-  const rim=kit.sstep(1.12,1.65,rho)*(24+22*(kit.fbm(x*.003,z*.003,901,3)*.5+.5));
-  const bump=2.5*kit.fbm(x*.01,z*.01,905,3)*kit.sstep(1.0,1.2,rho);
+  // closing ring of hills beyond the city loop (hides the edge of the world). rho = zone outside the loop;
+  // dn = distance from the road centre line, so the hill bases never start on or next to the road.
+  const h=kit.st.half;
+  const rim=kit.sstep(1.12,1.65,rho)*kit.sstep(h+30,h+75,dn)*(24+22*(kit.fbm(x*.003,z*.003,901,3)*.5+.5));
+  const bump=2.5*kit.fbm(x*.01,z*.01,905,3)*kit.sstep(1.0,1.2,rho)*kit.sstep(h+6,h+30,dn);
   return rim+bump;
 }
 const _tc1=[0,0,0];
 function terrainColorFn(cc,x,z,h,sl,dn,n1,near,kit){
   const st=kit.st,half=st.half,sst=kit.sstep;
-  const th=Math.atan2(z,x);let r=1;for(const hh of st.harm)r+=hh[1]*Math.sin(hh[0]*th+hh[2]);
-  const rho=Math.hypot(x,z)/(st.R*r);
+  // zone only (inside / outside the loop): kit.polarR follows the real track, including the custom loop
+  const rho=Math.hypot(x,z)/kit.polarR(Math.atan2(z,x));
   const big=kit.fbm(x*.0025,z*.0025,77,3)*.5+.5,mid=kit.fbm(x*.012,z*.012,78,2)*.5+.5;
   // base lawn mix: lush -> dry
   cc.setHex(0x4a8838);cc.lerp(new kit.THREE.Color(0x3b7a33),sst(.3,.7,big)*.6);cc.lerp(new kit.THREE.Color(0x86a047),sst(.55,.85,mid)*.55);
@@ -584,7 +586,8 @@ const WTINT=[0xf2eee6,0xd8cdbd,0xc9c4bc,0xe6e0d4,0xc89a80,0xdfd2b8,0xb8c2cc];
 const ROOFC=[0x9a4a36,0x7a3a2e,0x5a5f66,0x8a5a3c,0x4a5058,0xa05a40];
 function buildScenery(ctx){
   const kit=ctx.kit,T=kit.THREE,st=ctx.st,grp=ctx.grp,TOUCH=kit.TOUCH,L=ctx.L,DS=ctx.DS,half=st.half,rng=kit.mulberry(1357),tf=TOUCH?.6:1;
-  const polarR=th=>{let r=1;for(const h of st.harm)r+=h[1]*Math.sin(h[0]*th+h[2]);return st.R*r;};
+  // polarR / rhoOf are only used for coarse inside-the-loop zoning; every placement is checked against the real road
+  const polarR=th=>kit.polarR(th);
   const rhoOf=(x,z)=>Math.hypot(x,z)/polarR(Math.atan2(z,x));
   const occ=new Map(),CELL=64,key=(i,j)=>i*100003+j;
   const free=(x,z,r)=>{const ci=Math.floor(x/CELL),cj=Math.floor(z/CELL);for(let i=ci-1;i<=ci+1;i++)for(let j=cj-1;j<=cj+1;j++){const a=occ.get(key(i,j));if(a)for(const o of a){const dx=o.x-x,dz=o.z-z,rr=o.r+r;if(dx*dx+dz*dz<rr*rr)return false;}}return true;};
@@ -592,6 +595,9 @@ function buildScenery(ctx){
   const gmin=(x,z,r)=>{let m=1e9;for(const q of[[0,0],[r,0],[-r,0],[0,r],[0,-r]])m=Math.min(m,kit.terrainH(x+q[0],z+q[1]));return m;};
   const dist=(x,z)=>kit.nearest(x,z).dist;
   const at=(s,off)=>kit.pose(s,off);
+  // footprint of a building (conservative radius for any yaw, podiums included) must clear the road edge + 1.5 m
+  const fp=(w,d)=>Math.hypot(w,d)*.8;
+  const clear=(x,z,r)=>dist(x,z)>=half+1.5+r;
   const mats={};
   mats.glass=new T.MeshLambertMaterial({map:glassTexture(kit),vertexColors:true});
   mats.wall=new T.MeshLambertMaterial({map:wallTexture(kit),vertexColors:true});
@@ -642,13 +648,13 @@ function buildScenery(ctx){
    for(let a=0;a<n*14&&made<n;a++){
     const th=rng()*6.2832,rr=Math.sqrt(rng())*.4*polarR(th),x=Math.cos(th)*rr,z=Math.sin(th)*rr,w=20+rng()*22,d=20+rng()*22,core=1-rr/(.4*polarR(th));
     const H=55+Math.pow(rng(),1.8)*(120+190*core),yaw=.35+(rng()-.5)*.18;
-    if(!free(x,z,Math.max(w,d)*.72))continue;take(x,z,Math.max(w,d)*.72);
+    if(!clear(x,z,fp(w,d))||!free(x,z,Math.max(w,d)*.72))continue;take(x,z,Math.max(w,d)*.72);
     const r=rng();tower(x,z,w,d,H,yaw,r<.18?1:r<.34?2:r<.46?3:0);made++;}}
   // mid-rise ring
   {let n=Math.round(240*tf),made=0;
    for(let a=0;a<n*14&&made<n;a++){
     const th=rng()*6.2832,pr=polarR(th),rho=.4+rng()*.4,x=Math.cos(th)*pr*rho,z=Math.sin(th)*pr*rho,w=18+rng()*26,d=18+rng()*24;
-    if(dist(x,z)<half+60)continue;
+    if(dist(x,z)<half+60||!clear(x,z,fp(w,d)))continue;
     if(!free(x,z,Math.max(w,d)*.7))continue;take(x,z,Math.max(w,d)*.7);
     const yaw=.35+(rng()-.5)*.25;if(rng()<.22)tower(x,z,w,d,50+rng()*55,yaw,0);else mid(x,z,w,d,16+Math.pow(rng(),1.5)*60,yaw);made++;}}
   // corridor buildings beside the road
@@ -658,7 +664,7 @@ function buildScenery(ctx){
    for(let s=40;s<L-40&&made<cap;s+=step)for(const sd of[-1,1]){
     const dn=zoneD(s/L);if(rng()>dn*.8)continue;
     const off=sd*(half+34+rng()*55),p=at(s+rng()*step,off),w=18+rng()*22,d=18+rng()*22;
-    if(dist(p.x,p.z)<half+28)continue;if(!free(p.x,p.z,Math.max(w,d)*.7))continue;take(p.x,p.z,Math.max(w,d)*.7);
+    if(dist(p.x,p.z)<half+28||!clear(p.x,p.z,fp(w,d)))continue;if(!free(p.x,p.z,Math.max(w,d)*.7))continue;take(p.x,p.z,Math.max(w,d)*.7);
     const H=14+Math.pow(rng(),1.4)*55;if(rng()<.2)tower(p.x,p.z,w,d,40+rng()*60,p.hd,0);else mid(p.x,p.z,w,d,H,p.hd);made++;}}
   // construction cranes
   {let n=Math.round(5*tf+1),made=0;for(let a=0;a<400&&made<n;a++){const th=rng()*6.2832,pr=polarR(th),rho=.42+rng()*.3,x=Math.cos(th)*pr*rho,z=Math.sin(th)*pr*rho;
@@ -683,11 +689,12 @@ function buildScenery(ctx){
     if(dist(c.x,c.z)<half+80||dist(c.x,c.z)>320||!free(c.x,c.z,70))continue;take(c.x,c.z,70);
     const yaw=c.hd,cs=Math.cos(yaw),sn=Math.sin(yaw),P=(lx,lz)=>[c.x+cs*lx+sn*lz,c.z-sn*lx+cs*lz];
     for(let i=0;i<3;i++){const q=P(-30+i*30+(rng()-.5)*6,-20),w=34+rng()*20,d=20+rng()*8,h=8+rng()*4,col=rc([0xb9bec4,0x9aa6b4,0xc8c2b4,0x8fa0b0][(rng()*4)|0]),gz=gmin(q[0],q[1],12);
+      if(!clear(q[0],q[1],fp(w,d)))continue;
       boxB(Bp,q[0],gz-1.5,q[1],w,h+1.5,d,yaw,col);boxB(Bp,q[0],gz+h,q[1],w+.6,.5,d+.6,yaw,rc(0x70767c));
       for(let k=0;k<3;k++){const v=P(-30+i*30-w*.25+k*w*.25,-20+(rng()-.5)*d*.4);boxB(Bp,v[0],gz+h+.5,v[1],2.2,1.1,2.2,yaw,rc(0x8a9096));}}
-    for(let i=0;i<6;i++){const q=P(-35+(i%3)*14,22+((i/3)|0)*16),r=4.2+rng()*2.4,h=9+rng()*5,gz=gmin(q[0],q[1],r);cylB(Bp,q[0],gz-1,q[1],r,r,h+1,14,rc(i%2?0xe9ecef:0xc8ccd2),{capCol:rc(0x9aa0a6)});}
-    {const q=P(26,26),gz=gmin(q[0],q[1],3);cylB(Bp,q[0],gz-1,q[1],2.2,1.4,34,10,rc(0xc8c0b8));cylB(Bp,q[0],gz+22,q[1],1.9,1.5,4,10,rc(0xd04030));cylB(Bp,q[0],gz+28,q[1],1.6,1.4,3,10,rc(0xd04030));beacons.push([q[0],gz+34,q[1]]);}
-    for(let r=0;r<5;r++)for(let k=0;k<6;k++){if(rng()<.15)continue;const q=P(2+k*12.6,-4+r*5),gz=gmin(q[0],q[1],3),lv=1+((rng()*3)|0);for(let u=0;u<lv;u++)boxB(Bp,q[0],gz+u*2.62,q[1],12.2,2.6,2.5,yaw,rc(cc[(rng()*cc.length)|0]));}
+    for(let i=0;i<6;i++){const q=P(-35+(i%3)*14,22+((i/3)|0)*16),r=4.2+rng()*2.4,h=9+rng()*5,gz=gmin(q[0],q[1],r);if(!clear(q[0],q[1],r+.5))continue;cylB(Bp,q[0],gz-1,q[1],r,r,h+1,14,rc(i%2?0xe9ecef:0xc8ccd2),{capCol:rc(0x9aa0a6)});}
+    {const q=P(26,26),gz=gmin(q[0],q[1],3);if(clear(q[0],q[1],3)){cylB(Bp,q[0],gz-1,q[1],2.2,1.4,34,10,rc(0xc8c0b8));cylB(Bp,q[0],gz+22,q[1],1.9,1.5,4,10,rc(0xd04030));cylB(Bp,q[0],gz+28,q[1],1.6,1.4,3,10,rc(0xd04030));beacons.push([q[0],gz+34,q[1]]);}}
+    for(let r=0;r<5;r++)for(let k=0;k<6;k++){if(rng()<.15)continue;const q=P(2+k*12.6,-4+r*5),gz=gmin(q[0],q[1],3),lv=1+((rng()*3)|0);if(!clear(q[0],q[1],fp(12.2,2.5)))continue;for(let u=0;u<lv;u++)boxB(Bp,q[0],gz+u*2.62,q[1],12.2,2.6,2.5,yaw,rc(cc[(rng()*cc.length)|0]));}
     made++;}}
   grp.add(mkMesh(Bg,mats.glass));grp.add(mkMesh(Bw,mats.wall));grp.add(mkMesh(Bp,mats.plain));
   function mkMesh(b,m){const mesh=new T.Mesh(toGeo(b,T),m);mesh.frustumCulled=false;return mesh;}
@@ -768,13 +775,13 @@ function buildScenery(ctx){
 
 /* ---------- far field: wind turbines, pylons with wires, viaduct with moving traffic ---------- */
 function buildFar(ctx,S){
-  const kit=ctx.kit,T=kit.THREE,grp=ctx.grp,rng=S.rng,tf=S.tf,half=ctx.st.half,dist=S.dist,free=S.free,take=S.take,polarR=S.polarR;
+  const kit=ctx.kit,T=kit.THREE,grp=ctx.grp,rng=S.rng,tf=S.tf,half=ctx.st.half,dist=S.dist,free=S.free,take=S.take,at=S.at,L=ctx.L;
   const Bp=mkB(false,true),plain=new T.MeshLambertMaterial({vertexColors:true,side:T.DoubleSide});
   const W=hex2rgb(0xf0f2f4);
-  // turbines
+  // turbines: placed along the road at 190 to 360 m from the centre line (far hills beyond the city)
   const turb=[];const nT=Math.round(12*tf);
   for(let a=0;a<600&&turb.length<nT;a++){
-    const th=rng()*6.2832,rho=1.28+rng()*.2,pr=polarR(th)*rho,x=Math.cos(th)*pr,z=Math.sin(th)*pr,d=dist(x,z);
+    const s=rng()*L,sd=rng()<.5?-1:1,off=sd*(200+rng()*150),p=at(s,off),x=p.x,z=p.z,d=dist(x,z);
     if(d<190||d>360||!free(x,z,60))continue;take(x,z,60);
     const y=kit.terrainH(x,z),yaw=1.9+(rng()-.5)*.3;
     cylB(Bp,x,y-2,z,3.0,1.7,89,10,W);boxB(Bp,x,y+85,z,4.2,4.2,12,yaw,hex2rgb(0xdfe3e6));
@@ -799,10 +806,11 @@ function buildFar(ctx,S){
       rodB(g,[-a[1],a[0],a[1]],[a[1],a[0],a[1]],.25,col);rodB(g,[-a[1],a[0],-a[1]],[a[1],a[0],-a[1]],.25,col);rodB(g,[a[1],a[0],-a[1]],[a[1],a[0],a[1]],.25,col);rodB(g,[-a[1],a[0],-a[1]],[-a[1],a[0],a[1]],.25,col);
       rodB(g,[-a[1],a[0],a[1]],[b[1],b[0],-b[1]],.2,col);rodB(g,[a[1],a[0],a[1]],[-b[1],b[0],-b[1]],.2,col);}
     boxB(g,0,27.6,0,17,.6,.6,0,col);boxB(g,0,35.6,0,11,.6,.6,0,col);
-    const th0=rng()*6.2832,n=Math.round(12*tf),items=[],pts=[];let th=th0;
-    for(let i=0;i<n*3&&items.length<n;i++){
-      th+=170/(polarR(th)*1.42);const pr=polarR(th)*1.42,x=Math.cos(th)*pr,z=Math.sin(th)*pr,d=dist(x,z);
-      if(d<170||d>365)continue;const y=kit.terrainH(x,z);items.push({x:x,y:y-1,z:z,sx:1,ry:-th});pts.push({x:x,y:y-1,z:z,yaw:-th});
+    // one line of pylons running along the road, 170 m apart, on one side at about 195 m from the centre line
+    const n=Math.round(12*tf),items=[],pts=[],side=rng()<.5?-1:1,s0=rng()*L;
+    for(let i=0;i<n*3&&items.length<n&&i*170<L;i++){
+      const p=at(s0+i*170,side*195),x=p.x,z=p.z,d=dist(x,z);
+      if(d<170||d>365)continue;const y=kit.terrainH(x,z);items.push({x:x,y:y-1,z:z,sx:1,ry:p.hd});pts.push({x:x,y:y-1,z:z,yaw:p.hd});
     }
     if(items.length){
       grp.add(kit.inst(toGeo(g,T),plain,items));
@@ -815,10 +823,13 @@ function buildFar(ctx,S){
   }
   // viaduct
   for(let a=0;a<80;a++){
-    const th0=rng()*6.2832,th1=th0+.36,r0=polarR(th0)*1.34,r1=polarR(th1)*1.34,ax=Math.cos(th0)*r0,az=Math.sin(th0)*r0,bx=Math.cos(th1)*r1,bz=Math.sin(th1)*r1,mx=(ax+bx)/2,mz=(az+bz)/2;
+    // a 340 m span running beside the road, 200 m off the centre line on one side (high above, visual only)
+    const s0=rng()*L,side=rng()<.5?-1:1,pa=at(s0,side*200),pb=at(s0+340,side*200),ax=pa.x,az=pa.z,bx=pb.x,bz=pb.z,mx=(ax+bx)/2,mz=(az+bz)/2;
     if([[ax,az],[bx,bz],[mx,mz]].some(q=>{const d=dist(q[0],q[1]);return d<170||d>350;}))continue;
     const len=Math.hypot(bx-ax,bz-az),yaw=Math.atan2(bx-ax,bz-az),cs=Math.cos(yaw),sn=Math.sin(yaw);
     let top=-1e9;for(let i=0;i<=10;i++){const t=i/10;top=Math.max(top,kit.terrainH(ax+(bx-ax)*t,az+(bz-az)*t));}top+=15;
+    // ground piers must clear the road; the deck itself is high above it (visual only)
+    {let ok=true;for(let q=-len/2+10;q<len/2;q+=30){if(dist(mx+sn*q,mz+cs*q)<half+4){ok=false;break;}}if(!ok)continue;}
     const V=mkB(false,true),cx=mx,cz=mz,conc=hex2rgb(0xb4b8bc);
     boxB(V,cx,top,cz,11,1.3,len,yaw,conc);boxB(V,cx+cs*5.5,top+1.3,cz-sn*5.5,.35,1.0,len,yaw,hex2rgb(0x9ea3a8));boxB(V,cx-cs*5.5,top+1.3,cz+sn*5.5,.35,1.0,len,yaw,hex2rgb(0x9ea3a8));
     for(let q=-len/2+10;q<len/2;q+=30){const px=cx+sn*q,pz=cz+cs*q,g0=kit.terrainH(px,pz);boxB(V,px,g0-1,pz,2.2,top-g0+1,2.2,yaw,conc);boxB(V,px,top-1.4,pz,8,1.4,2.4,yaw,conc);}

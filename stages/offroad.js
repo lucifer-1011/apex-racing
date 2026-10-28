@@ -319,6 +319,12 @@ function groundMax(kit,cx,cz,yaw,w,d){
   return m;
 }
 const faceYaw=(hd,side)=>hd+(side>0?PI/2:-PI/2);
+// road-relative clearance: true when (x,z) is at least st.half+m from the centre line (nearest() measures to the real loop)
+const clearOK=(kit,x,z,m)=>kit.nearest(x,z).dist>=kit.st.half+m;
+// same for a local rectangle x0..x1, z0..z1 (grid of samples) placed like groundMax
+function footClear(kit,cx,cz,yaw,x0,x1,z0,z1,m){const c=Math.cos(yaw),s=Math.sin(yaw);
+  for(let i=0;i<=4;i++)for(let j=0;j<=4;j++){const lx=x0+(x1-x0)*i/4,lz=z0+(z1-z0)*j/4,x=cx+lx*c+lz*s,z=cz-lx*s+lz*c;if(!clearOK(kit,x,z,m))return false;}
+  return true;}
 
 /* ---------- module state ---------- */
 const UT={value:0};
@@ -408,9 +414,12 @@ ApexKit.register('offroad',{
     // timing tower + grandstand near start/finish, pit area before the line
     {const sT=-12,pT=kit.pose(sT,22);const yaw=faceYaw(pT.hd,1);
       const y=groundMax(kit,pT.x,pT.z,yaw,6,6)+.1;const m=new THREE.Mesh(towerGeometry(),mat);m.position.set(pT.x,y,pT.z);m.rotation.y=yaw;grp.add(m);reserved.push({x:pT.x,z:pT.z,r:12});}
-    {const rng2=seeded(404),rows=T?5:8,W=36;const p=kit.pose(26,-21);const yaw=faceYaw(p.hd,-1);
-      const cx=p.x+Math.sin(yaw)*0,cz=p.z;const y=groundMax(kit,cx,cz,yaw,W,(rows*1.05)+2)+.1;
-      const m=new THREE.Mesh(grandstandGeometry(rng2,W,rows,T?.55:.72),mat);m.position.set(cx,y,cz);m.rotation.y=yaw;grp.add(m);reserved.push({x:cx,z:cz,r:30});
+    {const rng2=seeded(404),rows=T?5:8,W=36;let p=kit.pose(26,-21),yaw=faceYaw(p.hd,-1);
+      // the stand plinth is W+20 by 40 m: start at the original spot and move outward until the plinth clears the road
+      let found=false;for(let o=21;o<=75&&!found;o+=2)for(const sg of[-1,1]){const q=kit.pose(26,sg*o),yw=faceYaw(q.hd,-1);
+        if(footClear(kit,q.x,q.z,yw,-(W+20)/2,(W+20)/2,-26,14,1.5)){p=q;yaw=yw;found=true;break;}}
+      const cx=p.x,cz=p.z;const y=groundMax(kit,cx,cz,yaw,W,(rows*1.05)+2)+.1;
+      const m=new THREE.Mesh(grandstandGeometry(rng2,W,rows,T?.55:.72),mat);m.position.set(cx,y,cz);m.rotation.y=yaw;grp.add(m);reserved.push({x:cx,z:cz,r:40});
       // sponsor board above the stand
       const sm=new THREE.Mesh(new THREE.PlaneGeometry(12,3),new THREE.MeshBasicMaterial({map:signTex('CANYON MX','#e8561a','#fff4d6'),side:THREE.DoubleSide}));
       sm.position.set(0,rows*.55+6.6,1.9);sm.rotation.y=0;const holderG=new THREE.Group();holderG.position.set(cx,y,cz);holderG.rotation.y=yaw;holderG.add(sm);grp.add(holderG);}
@@ -425,22 +434,22 @@ ApexKit.register('offroad',{
 
     /* ===== banners, flags, light poles along the track ===== */
     {const atlas=bannerAtlas(),bm=new THREE.MeshBasicMaterial({map:atlas,side:THREE.DoubleSide}),perRow=[[],[],[],[]],frames=[],step=T?56:28;
-      let n=0;for(let s=14;s<L-10;s+=step){for(const sd of[-1,1]){const p=kit.pose(s+(sd>0?step/2:0),sd*(half+9.2));if(Math.hypot(p.x-0,p.z-0)<0)continue;
+      let n=0;for(let s=14;s<L-10;s+=step){for(const sd of[-1,1]){const p=kit.pose(s+(sd>0?step/2:0),sd*(half+9.2));if(!clearOK(kit,p.x,p.z,1.5))continue;
         let near=false;for(const r of reserved)if(Math.hypot(p.x-r.x,p.z-r.z)<r.r*.7){near=true;break;}if(near)continue;
         const y=kit.terrainH(p.x,p.z)-.05,ry=faceYaw(p.hd,sd);perRow[n%4].push({x:p.x,y,z:p.z,sx:1,ry});frames.push({x:p.x,y,z:p.z,sx:1,ry});n++;}}
       for(let i=0;i<4;i++)if(perRow[i].length)grp.add(kit.inst(bannerPlane(i),bm,perRow[i]));
       if(frames.length)grp.add(kit.inst(bannerFrameGeo(),mat,frames));}
     {const poles=[],flags=[],chk=[];const fs=T?160:80;
-      for(let s=30;s<L-20;s+=fs){for(const sd of[-1,1]){const p=kit.pose(s+(sd>0?fs/2:0),sd*(half+11.5));let near=false;for(const r of reserved)if(Math.hypot(p.x-r.x,p.z-r.z)<r.r*.8){near=true;break;}if(near)continue;
+      for(let s=30;s<L-20;s+=fs){for(const sd of[-1,1]){const p=kit.pose(s+(sd>0?fs/2:0),sd*(half+11.5));if(!clearOK(kit,p.x,p.z,1.5))continue;let near=false;for(const r of reserved)if(Math.hypot(p.x-r.x,p.z-r.z)<r.r*.8){near=true;break;}if(near)continue;
         const y=kit.terrainH(p.x,p.z)-.05;poles.push({x:p.x,y,z:p.z,sx:1});flags.push({x:p.x,y:y+6.9,z:p.z,sx:1,ry:-.29+(H(Math.round(p.x),Math.round(p.z),3)-.5)*.3,c:[0xe8561a,0xd81e1e,0xf2f2f2,0x1f6fd1,0xffd23a][((s/fs)|0)%5]});}}
-      for(const r of reserved){const k=T?4:8;for(let i=0;i<k;i++){const a=i/k*TAU,x=r.x+Math.cos(a)*(r.r-10),z=r.z+Math.sin(a)*(r.r-10);poles.push({x,y:kit.terrainH(x,z)-.05,z,sx:1});flags.push({x,y:kit.terrainH(x,z)+6.9,z,sx:1,ry:-.29,c:[0xe8561a,0xd81e1e,0xf2f2f2,0x1f6fd1][i%4]});}}
+      for(const r of reserved){const k=T?4:8;for(let i=0;i<k;i++){const a=i/k*TAU,x=r.x+Math.cos(a)*(r.r-10),z=r.z+Math.sin(a)*(r.r-10);if(!clearOK(kit,x,z,1.5))continue;poles.push({x,y:kit.terrainH(x,z)-.05,z,sx:1});flags.push({x,y:kit.terrainH(x,z)+6.9,z,sx:1,ry:-.29,c:[0xe8561a,0xd81e1e,0xf2f2f2,0x1f6fd1][i%4]});}}
       if(poles.length){grp.add(kit.inst(flagPoleGeo(),mat,poles));
         const fm=new THREE.MeshLambertMaterial({side:THREE.DoubleSide});
         fm.onBeforeCompile=function(sh){sh.uniforms.uT=UT;sh.vertexShader='uniform float uT;\n'+sh.vertexShader.replace('#include <begin_vertex>','vec3 transformed=vec3(position);float ph=uT*4.0+instanceMatrix[3].x*0.21+instanceMatrix[3].z*0.17;transformed.z+=sin(ph+position.x*3.2)*0.16*position.x;transformed.y+=sin(ph*1.3+position.x*2.1)*0.05*position.x;');};
         const fg=new THREE.PlaneGeometry(1.5,.9,10,2);fg.translate(.75,-.45,0);grp.add(kit.inst(fg,fm,flags));
         kit.addUpdater((dt,now)=>{UT.value=now*.001;});}}
     {const poles=[],heads=[],ls=T?140:70;
-      for(let s=10;s<L;s+=ls){const sd=((s/ls)|0)%2?1:-1,p=kit.pose(s,sd*(half+13));let near=false;for(const r of reserved)if(Math.hypot(p.x-r.x,p.z-r.z)<r.r){near=true;break;}if(near)continue;
+      for(let s=10;s<L;s+=ls){const sd=((s/ls)|0)%2?1:-1,p=kit.pose(s,sd*(half+13));if(!clearOK(kit,p.x,p.z,1.5))continue;let near=false;for(const r of reserved)if(Math.hypot(p.x-r.x,p.z-r.z)<r.r){near=true;break;}if(near)continue;
         const y=kit.terrainH(p.x,p.z)-.05,ry=faceYaw(p.hd,sd)+PI;poles.push({x:p.x,y,z:p.z,sx:1,ry});heads.push({x:p.x,y,z:p.z,sx:1,ry});}
       if(poles.length){grp.add(kit.inst(lightPoleGeo(),mat,poles));grp.add(kit.inst(lampGeo(),new THREE.MeshBasicMaterial({color:0xfff3c8}),heads));}}
 
@@ -450,7 +459,7 @@ ApexKit.register('offroad',{
       for(const c of cand){if(c.s<110||c.s>L-110)continue;let ok=true;for(const q of pick){let ds=Math.abs(c.s-q.s);ds=Math.min(ds,L-ds);if(ds<130){ok=false;break;}}if(ok)pick.push(c);if(pick.length>=(T?6:10))break;}
       const tyres=[],hay=[],tcol=[0x2a2a2a,0x2a2a2a,0xd81e1e,0x2a2a2a,0xf2f2f2,0x2a2a2a];
       pick.forEach((c,idx)=>{const useTyre=idx<(T?4:6),len=useTyre?(T?9:13):(T?5:8);
-        for(let i=-len;i<=len;i++){const p=kit.pose(c.s+i*1.05,c.side*(half+11.4)),y=kit.terrainH(p.x,p.z)-.05;
+        for(let i=-len;i<=len;i++){const p=kit.pose(c.s+i*1.05,c.side*(half+11.4)),y=kit.terrainH(p.x,p.z)-.05;if(!clearOK(kit,p.x,p.z,1.5))continue;
           if(useTyre){const rows=T?2:3;for(let r=0;r<rows;r++)tyres.push({x:p.x,y:y+r*.31,z:p.z,sx:1,ry:(i+r)*.9,c:tcol[(i+r*2+idx*3+60)%6]});}
           else if(i%2===0){hay.push({x:p.x,y,z:p.z,sx:1,ry:p.hd+PI/2});if(i%4===0)hay.push({x:p.x,y:y+.7,z:p.z,sx:1,ry:p.hd+PI/2});}}});
       if(tyres.length)grp.add(kit.inst(tyreGeo(0x777777,0xdddddd),new THREE.MeshLambertMaterial({vertexColors:true}),tyres));
@@ -475,9 +484,11 @@ ApexKit.register('offroad',{
 
     /* ===== layered mesas, buttes, spires, arches, hoodoos, canyon rim ===== */
     {const rm=seeded(55),seg=T?10:14,mg=[mesaGeo(11,seg,0),mesaGeo(12,seg,1),mesaGeo(13,seg,2)],lists=[[],[],[]],tint=[0xffffff,0xf6e6d4,0xffe0c8,0xf0d8c0];
-      const nM=T?20:34;for(let i=0;i<nM;i++){const a=rm()*TAU,r=420+rm()*220,x=Math.cos(a)*r,z=Math.sin(a)*r,kd=rm()<.45?1:(rm()<.5?0:2);
+      const nM=T?20:34;for(let i=0;i<nM;i++){const kd=rm()<.45?1:(rm()<.5?0:2);
         const wdt=kd===2?14+rm()*14:40+rm()*55,ht=kd===2?70+rm()*60:35+rm()*60;
-        lists[kd].push({x,y:kit.terrainH(x,z)-3,z,sx:wdt,sy:ht,sz:wdt*(.7+rm()*.5),ry:rm()*TAU,c:tint[(rm()*4)|0]});}
+        // far mesas: 130 to 440 m from the road centre line (spot), so a wide mesa never reaches the track
+        const p=spot(130,440,40);if(!p)continue;
+        lists[kd].push({x:p.x,y:p.y-3,z:p.z,sx:wdt,sy:ht,sz:wdt*(.7+rm()*.5),ry:rm()*TAU,c:tint[(rm()*4)|0]});}
       // closer buttes inside and outside the loop
       for(let i=0;i<(T?8:14);i++){const p=spot(95,330,30);if(!p)continue;const kd=i%3===1?2:0,wdt=kd===2?7+rm()*6:16+rm()*22,ht=kd===2?32+rm()*26:18+rm()*26;
         lists[kd].push({x:p.x,y:p.y-2,z:p.z,sx:wdt,sy:ht,sz:wdt*(.8+rm()*.4),ry:rm()*TAU,c:tint[(rm()*4)|0]});}
@@ -494,7 +505,7 @@ ApexKit.register('offroad',{
       for(let i=0;i<n;i++){const p=spot(17,260,10);if(!p)continue;const s=.8+Math.pow(rb(),2)*4.2;lists[i%2].push({x:p.x,y:p.y-.2*s,z:p.z,sx:s*(1+rb()*.4),sy:s*(.7+rb()*.5),sz:s,ry:rb()*TAU,c:[0xffffff,0xf4dcc4,0xe8c8aa][(rb()*3)|0]});}
       for(let i=0;i<2;i++)if(lists[i].length)grp.add(kit.inst(bg[i],mat,lists[i]));
       const peb=[],np=Math.round(520*tk);
-      for(let i=0;i<np;i++){const s=rb()*L,sd=rb()<.5?-1:1,off=sd*(half+1.8+rb()*5.2),p=kit.pose(s,off),y=kit.terrainH(p.x,p.z),sz=.07+rb()*.17;
+      for(let i=0;i<np;i++){const s=rb()*L,sd=rb()<.5?-1:1,off=sd*(half+1.8+rb()*5.2),p=kit.pose(s,off),y=kit.terrainH(p.x,p.z),sz=.07+rb()*.17;if(!clearOK(kit,p.x,p.z,1.5))continue;
         peb.push({x:p.x,y:y-.02,z:p.z,sx:sz,sy:sz*.6,sz:sz*(.8+rb()*.5),ry:rb()*TAU,c:[0xb08a5e,0x8d6a47,0xc9a87c,0x7a5a3c][(rb()*4)|0]});}
       grp.add(kit.inst(kit.geo('IcosahedronGeometry',1,0),new THREE.MeshLambertMaterial(),peb));}
 
@@ -512,7 +523,7 @@ ApexKit.register('offroad',{
       const tf=[],ntf=Math.round(300*tk);for(let i=0;i<ntf;i++){const p=spot(15,200,8);if(!p)continue;const s=.8+rc()*.9;tf.push({x:p.x,y:p.y-.02,z:p.z,sx:s,sy:s*(.7+rc()*.6),ry:rc()*TAU,c:0xffffff});}
       if(tf.length)grp.add(kit.inst(tuftGeo(),mat,tf));
       // skull signs and bones
-      const sk=[],nsk=T?6:12;for(let i=0;i<nsk;i++){const p=kit.pose((i+.5)/nsk*L+(rc()-.5)*60,(i%2?1:-1)*(half+11.8)),y=kit.terrainH(p.x,p.z)-.05;sk.push({x:p.x,y,z:p.z,sx:1,ry:faceYaw(p.hd,i%2?1:-1)});}
+      const sk=[],nsk=T?6:12;for(let i=0;i<nsk;i++){const p=kit.pose((i+.5)/nsk*L+(rc()-.5)*60,(i%2?1:-1)*(half+11.8)),y=kit.terrainH(p.x,p.z)-.05;if(!clearOK(kit,p.x,p.z,1.5))continue;sk.push({x:p.x,y,z:p.z,sx:1,ry:faceYaw(p.hd,i%2?1:-1)});}
       grp.add(kit.inst(skullSignGeo(),mat,sk));
       const bn=[],nbn=T?6:12;for(let i=0;i<nbn;i++){const p=spot(20,200,10);if(!p)continue;bn.push({x:p.x,y:p.y,z:p.z,sx:1.2+rc(),ry:rc()*TAU});}
       if(bn.length)grp.add(kit.inst(bonesGeo(),mat,bn));

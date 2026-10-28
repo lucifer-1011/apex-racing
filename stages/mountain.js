@@ -144,14 +144,17 @@
   /* ================= TERRAIN ================= */
   const forestAt=(kit,x,z)=>kit.fbm(x*.007,z*.007,931,3);
 
+  // Rim ridges and valley floor bumps. rho (polarR) is used only for the coarse outside/inside side of
+  // the loop; the bands themselves are distances from the road centre line (dn), so they follow the track.
   function terrainFeat(x,z,rho,dn,kit){
     let a=0;
-    const out=kit.sstep(1.04,1.3,rho);
+    const side=kit.sstep(1.0,1.06,rho);                 // coarse: outside the loop
+    const out=side*kit.sstep(HALF+6,HALF+40,dn);        // rim ridges start a band away from the road
     if(out>0){
       const r=1-Math.abs(kit.fbm(x*.011,z*.011,901,3));
       a+=out*(15*r*r*r-3)+out*2.6*kit.fbm(x*.05,z*.05,905,2);
     }
-    const inn=kit.sstep(.97,.8,rho);
+    const inn=kit.sstep(.97,.8,rho)*kit.sstep(HALF+4,HALF+20,dn);   // coarse: inside the loop
     if(inn>0)a+=inn*3*kit.fbm(x*.016,z*.016,907,3);
     return a;
   }
@@ -347,6 +350,8 @@
   }
   const slopeAt=(kit,x,z)=>{const a=kit.terrainH(x+3,z)-kit.terrainH(x-3,z),b=kit.terrainH(x,z+3)-kit.terrainH(x,z-3);return Math.hypot(a,b)/6;};
   const dist2road=(kit,x,z)=>kit.nearest(x,z).dist;
+  // true when a point of footprint radius r keeps st.half + 1.5 m clear of the road centre line
+  const clearOf=(kit,x,z,r)=>dist2road(kit,x,z)>=HALF+1.5+r;
 
   /* ================= TREES, SHRUBS, FLOWERS ================= */
   const GREENS=[[0x1b3a22,0x2a5a2e],[0x1d4026,0x2f6232],[0x203d20,0x34643a],[0x17352a,0x265446]];
@@ -394,7 +399,7 @@
     while(near.fir.length+near.spr.length+near.snow.length<target.near&&tries++<26000){
       const s=rng()*L,side=rng()<.5?-1:1,off=HF+2.8+Math.pow(rng(),1.7)*(side<0?110:150);
       const p=kit.pose(s,side*off),x=p.x,z=p.z;
-      if(dist2road(kit,x,z)<HF+2.4)continue;
+      if(!clearOf(kit,x,z,2.4))continue;   // canopy radius of a near spruce is at most 2.4 m
       const r=ok(x,z,off);if(!r)continue;
       const sc=(.45+rng()*.5)*(1-.3*kit.sstep(30,90,r.rel)),it={x,y:r.h-.25,z,sx:sc,sy:sc*(.9+rng()*.5),ry:rng()*6.28,c:tints[(rng()*tints.length)|0]};
       const q=rng();
@@ -404,6 +409,7 @@
     while(far.length<target.far&&tries++<30000){
       const s=rng()*L,side=rng()<.5?-1:1,off=HF+70+rng()*(side<0?380:300);
       const p=kit.pose(s,side*off),x=p.x,z=p.z;
+      if(!clearOf(kit,x,z,4.4))continue;   // far firs: canopy up to about 4.3 m
       const r=ok(x,z,off,true);if(!r)continue;
       const sc=(.8+rng()*.9)*(1-.3*kit.sstep(30,90,r.rel));
       far.push({x,y:r.h-.3,z,sx:sc*1.1,sy:sc*(1.1+rng()*.5),ry:rng()*6.28,c:tints[(rng()*tints.length)|0]});
@@ -412,7 +418,7 @@
     tries=0;const nAs=Math.round(150*D);
     while(aspen.length<nAs&&tries++<6000){
       const s=rng()*L,side=rng()<.65?1:-1,off=HF+4+rng()*70;const p=kit.pose(s,side*off);
-      if(dist2road(kit,p.x,p.z)<HF+3)continue;
+      if(!clearOf(kit,p.x,p.z,1.6))continue;
       const h=kit.terrainH(p.x,p.z);if(h-W.WY<6)continue;if(slopeAt(kit,p.x,p.z)>.6||h-W.MY>40)continue;
       if(kit.fbm(p.x*.02,p.z*.02,919,2)<.05)continue;
       const sc=.35+rng()*.3;aspen.push({x:p.x,y:h-.2,z:p.z,sx:sc,sy:sc*(.9+rng()*.3),ry:rng()*6.28,c:0xffffff});
@@ -421,12 +427,14 @@
     tries=0;const nSh=Math.round(420*D),nFl=Math.round(520*D);
     while((shr.length<nSh||flw.length<nFl)&&tries++<9000){
       const s=rng()*L,side=rng()<.5?-1:1,off=HF+2+Math.pow(rng(),1.5)*34;const p=kit.pose(s,side*off);
-      const x=p.x,z=p.z;if(dist2road(kit,x,z)<HF+1.9)continue;
+      const x=p.x,z=p.z;if(!clearOf(kit,x,z,1.3))continue;
       const h=kit.terrainH(x,z);if(h-W.WY<6)continue;const sl=slopeAt(kit,x,z);if(sl>.7)continue;
       if(rng()<.45&&shr.length<nSh){const sc=.3+rng()*.6;shr.push({x,y:h,z,sx:sc*1.3,sy:sc*.75,sz:sc*1.3,ry:rng()*6,c:[0x4b6f38,0x5e7d3c,0x6d6b3a,0x3d5f35,0x7a5d3c][(rng()*5)|0]});}
       else if(flw.length<nFl&&sl<.45){const n=kit.fbm(x*.09+30,z*.09,913,2);
         const c=n>.15?0xeacb3a:n<-.2?0xd9d0ee:rng()<.5?0xe26b52:0xf3efe4;
-        for(let q=0;q<3&&flw.length<nFl;q++){const a=rng()*6.28,d=rng()*1.6,sc=.07+rng()*.07;flw.push({x:x+Math.cos(a)*d,y:kit.terrainH(x+Math.cos(a)*d,z+Math.sin(a)*d)+.12,z:z+Math.sin(a)*d,sx:sc,sy:sc*.8,sz:sc,ry:rng()*6,c});}}
+        for(let q=0;q<3&&flw.length<nFl;q++){const a=rng()*6.28,d=rng()*1.6,sc=.07+rng()*.07;
+          const fx=x+Math.cos(a)*d,fz=z+Math.sin(a)*d;if(!clearOf(kit,fx,fz,0))continue;   // flower tufts too
+          flw.push({x:fx,y:kit.terrainH(fx,fz)+.12,z:fz,sx:sc,sy:sc*.8,sz:sc,ry:rng()*6,c});}}
     }
     mk(spruceGeo(kit,4,3,1,false,0),near.fir);
     mk(spruceGeo(kit,4,3,.8,false,1),near.spr);
@@ -455,19 +463,19 @@
     let n=0,tries=0;const nc=Math.round(64*D);
     while(n<nc&&tries++<4000){
       const s=rng()*L,side=rng()<.8?-1:1,off=HALF+(side<0?9+rng()*75:14+rng()*60),p=kit.pose(s,side*off);
-      if(dist2road(kit,p.x,p.z)<HALF+7)continue;
       const h=kit.terrainH(p.x,p.z);if(h-W.WY<8)continue;
       const sl=slopeAt(kit,p.x,p.z);if(sl<(side<0?.4:.55))continue;
       const sc=.75+rng()*1.5;
+      if(!clearOf(kit,p.x,p.z,5*sc*1.15))continue;   // footprint of the crag: widest layers and side pillar, plus jitter
       addCrag(B,rng,p.x,h,p.z,rng()*6.28,sc*1.15,sc*(.45+rng()*.55));n++;
     }
     // boulders and rockfall debris along the verges
     const nb=Math.round(190*D);n=0;tries=0;
     while(n<nb&&tries++<4000){
       const s=rng()*L,side=rng()<.55?-1:1,off=HALF+2.1+Math.pow(rng(),1.4)*(side<0?40:26),p=kit.pose(s,side*off);
-      if(dist2road(kit,p.x,p.z)<HALF+1.9)continue;
       const h=kit.terrainH(p.x,p.z);if(h-W.WY<6)continue;
       const sc=.45+Math.pow(rng(),2)*2.1,c=STRATA[(rng()*5)|0];
+      if(!clearOf(kit,p.x,p.z,sc*1.5+.3))continue;   // boulder blob radius is at most 1.5 sc, plus jitter
       B.T(p.x,h+sc*.25,p.z,rng()*6.28,1).J(.18,(rng()*500)|0);
       B.blob(0,0,0,sc*(1+rng()*.5),sc*.7,sc*(.9+rng()*.4),hexRGB(c[0]),hexRGB(c[1]),0);n++;
     }
@@ -493,10 +501,13 @@
     const kit=ctx.kit,THREE=kit.THREE,rng=kit.mulberry(6133),L=kit.L,DS=kit.DS;
     const segs=[];let guard=0;
     const nL=kit.TOUCH?7:11,nR=kit.TOUCH?3:5;
+    // a wall face sits at st.half + 1.7; every sample must keep st.half + 1.5 clear (switchbacks can fold a pose offset)
+    const clearSeg=(side,a,b)=>{const n=Math.ceil((b-a)/1.5);for(let i=0;i<=n;i++){const p=kit.pose(a+(b-a)*i/n,side*(HALF+1.7));if(!clearOf(kit,p.x,p.z,0))return false;}return true;};
     const tryAdd=(side,minLen,maxLen,H0,H1)=>{
       for(let t=0;t<30;t++){
         const len=minLen+rng()*(maxLen-minLen),s0=80+rng()*(L-160-len);
         if(segs.some(q=>q.side===side&&s0<q.s1+30&&s0+len>q.s0-30))continue;
+        if(!clearSeg(side,s0,s0+len))continue;
         segs.push({side,s0,s1:s0+len,H:H0+rng()*(H1-H0)});return;
       }
     };
@@ -685,9 +696,10 @@
     while(found<nF&&tries++<260){
       const s=200+rng()*(L-400),off=-(HALF+26+rng()*60),p=kit.pose(s,off);
       if(used.some(u=>Math.abs(u-s)<350))continue;
-      if(slopeAt(kit,p.x,p.z)<.35||kit.terrainH(p.x,p.z)-W.MY<10)continue;
-      const path=descend(kit,p.x,p.z,70,(x,z)=>dist2road(kit,x,z)<HALF+5.5);
-      const e=path[path.length-1];if(dist2road(kit,e[0],e[1])>=HALF+5.5||path.length<14)continue;
+      if(slopeAt(kit,p.x,p.z)<.35||kit.terrainH(p.x,p.z)-W.MY<10||!clearOf(kit,p.x,p.z,4))continue;
+      const path=descend(kit,p.x,p.z,70,(x,z)=>dist2road(kit,x,z)<HALF+9.5);
+      // the culvert head (1.8 m half width, laid across the road) must end at least st.half + 1.5 + 1.8 m out
+      const e=path[path.length-1],ed=dist2road(kit,e[0],e[1]);if(ed<HALF+8||ed>=HALF+9.5||path.length<14)continue;
       if(kit.terrainH(p.x,p.z)-kit.terrainH(e[0],e[1])<16)continue;
       used.push(s);found++;ribbon(smoothPts(path),1.2,3.4,[.66,.82,.92],[1,1,1]);ends.push(e);
     }
@@ -697,7 +709,7 @@
       const s=rng()*L,p=kit.pose(s,HALF+8+rng()*6);
       if(dist2road(kit,p.x,p.z)<HALF+5||kit.terrainH(p.x,p.z)-W.WY<14)continue;
       const path=descend(kit,p.x,p.z,90,(x,z)=>kit.terrainH(x,z)<W.WY+1.2);
-      if(path.length<18)continue;found++;ribbon(smoothPts(path),1.1,1.8,[.55,.76,.88],[.8,.9,.96]);
+      if(path.length<18||path.some(q=>!clearOf(kit,q[0],q[1],1.5)))continue;found++;ribbon(smoothPts(path),1.1,1.8,[.55,.76,.88],[.8,.9,.96]);
     }
     if(pos.length){
       const g=new THREE.BufferGeometry();

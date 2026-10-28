@@ -532,15 +532,19 @@ function addProps(ctx){
   const cnt=n=>Math.max(1,Math.round(n*Q));
   const CB=[],CS=[];
   const sideV=(s,side)=>{const q=kit.pose(s,0);return{x:Math.cos(q.hd)*side,z:-Math.sin(q.hd)*side,hd:q.hd};}; // toward road for off=side*..
-  const near=(x,z,off)=>{const r=kit.nearest(x,z);return r.dist>=Math.abs(off)-1.5&&r.dist<1e8;};
+  // Clearance: nothing sits closer than st.half + 1.5 m to the centre line (hard rule 5). nearest() measures to the
+  // road's sample points, which can read up to ~0.2 m long at this range, so the floor carries a 0.4 m margin.
+  const MINC=half+1.9;
+  const near=(x,z,off)=>{const r=kit.nearest(x,z);return r.dist>=Math.max(Math.abs(off)-1.5,MINC)&&r.dist<1e8;};
   /* ---- sites: bridges, huts, towers ---- */
   const bridges=[],huts=[],towers=[];
   S.forEach(q=>{const sb=(q.s0+q.s1)/2,c=Math.abs(sc(q,sb));
     bridges.push({q,s:sb,a:q.side*(c-6.5),b:q.side*(c+6.5),hut:q.side*(c+13)});});
+  // a hut that does not fit at its nominal place slides along the road (fixed order of tries, so all players match)
   const hutDefs=[[.31,10],[.31+24/L,13],[.74,-11],[.74-20/L,-14]];
-  hutDefs.forEach(h=>{const off=h[1],s=h[0]*L,p=kit.pose(s,off);if(near(p.x,p.z,off)){const v=sideV(s,Math.sign(off));huts.push({x:p.x,z:p.z,yaw:Math.atan2(v.x,v.z)});}});
+  hutDefs.forEach(h=>{const off=h[1];for(const ds of[0,-8,8,-16,16]){const s=h[0]*L+ds,p=kit.pose(s,off);if(near(p.x,p.z,off)){const v=sideV(s,Math.sign(off));huts.push({x:p.x,z:p.z,yaw:Math.atan2(v.x,v.z)});break;}}});
   [[.45,-14],[.9,15]].forEach(t=>{const off=t[1],s=t[0]*L,p=kit.pose(s,off);if(near(p.x,p.z,off)){const v=sideV(s,Math.sign(off));towers.push({x:p.x,z:p.z,yaw:Math.atan2(v.x,v.z)});}});
-  bridges.forEach(b=>{const p=kit.pose(b.s,b.hut),v=sideV(b.s,Math.sign(b.hut));huts.push({x:p.x,z:p.z,yaw:Math.atan2(-v.x,-v.z)});});
+  bridges.forEach(b=>{const p=kit.pose(b.s,b.hut),v=sideV(b.s,Math.sign(b.hut));if(kit.nearest(p.x,p.z).dist>=MINC+2.2)huts.push({x:p.x,z:p.z,yaw:Math.atan2(-v.x,-v.z)});});
   huts.forEach(h=>CB.push({x:h.x,z:h.z,r:7}));towers.forEach(h=>CB.push({x:h.x,z:h.z,r:6}));
   huts.forEach(h=>CS.push({x:h.x,z:h.z,r:3.2}));towers.forEach(h=>CS.push({x:h.x,z:h.z,r:2.6}));
   bridges.forEach(b=>{for(let o=6;o<Math.abs(b.b)+2;o+=5.5){const p=kit.pose(b.s,Math.sign(b.b)*o);CB.push({x:p.x,z:p.z,r:5.5});}});
@@ -604,11 +608,12 @@ function addProps(ctx){
   tryAdd('mushrooms',()=>{[0xc4301f,0xe08a2a].forEach((col,i)=>{const g=geoMush(col),pl=placer(SEED+30+i,false);
     add(mk(g,solid,gather(pl,cnt(60),5.8,20,1.5).map(p=>{const s=1+rv()*.8;return{x:p.x,y:p.y-.02,z:p.z,ry:rv()*6,sx:s};}),triCount(g)));});});
   tryAdd('vines',()=>{const g=geoVine(),pl=placer(SEED+40,false);
-    add(mk(g,leaf,gather(pl,cnt(170),8.5,30,1.4).map(p=>{const out=Math.sign(p.off),q=kit.pose(p.s,p.off+out*1.5);return{x:q.x,y:p.y+14+rv()*3,z:q.z,ry:rv()*6,sx:1,sy:.6+rv()*.7,c:tint()};}),triCount(g)));});
+    add(mk(g,leaf,gather(pl,cnt(170),8.5,30,1.4).map(p=>{const out=Math.sign(p.off),q0=kit.pose(p.s,p.off+out*1.5),q=kit.nearest(q0.x,q0.z).dist>=MINC?q0:p;return{x:q.x,y:p.y+14+rv()*3,z:q.z,ry:rv()*6,sx:1,sy:.6+rv()*.7,c:tint()};}),triCount(g)));});
   tryAdd('fallen',()=>{const g=geoFallen(),pl=placer(SEED+41,false),items=[];
     for(let i=0,k=0;i<cnt(28)&&k<200;k++){const p=pl(7.5,35,1.2);if(!p)continue;const sx=.7+rv()*.5,ry=rv()*TAU,ca=Math.cos(ry),sa=Math.sin(ry),e=4.5*sx;
       const ax=p.x+ca*e*1,az=p.z-sa*e,bx=p.x-ca*e,bz=p.z+sa*e;
-      const ok=[[ax,az],[bx,bz]].every(c=>{const r=kit.nearest(c[0],c[1]);return r.dist>5.8;});if(!ok)continue;
+      // the whole trunk (its visible span is about +-6 * sx along its own axis) must stay clear of the road
+      const ok=[0,.25,.5,.75,1].every(f=>{const u=(f*2-1)*6*sx,r=kit.nearest(p.x+ca*u,p.z-sa*u);return r.dist>=MINC;});if(!ok)continue;
       const ya=kit.terrainH(ax,az),yb=kit.terrainH(bx,bz);
       items.push({x:p.x,y:(ya+yb)/2-.15,z:p.z,ry,rz:Math.atan2(ya-yb,2*e)*.9,sx,c:tint()});i++;}
     add(mk(g,solid,items,triCount(g)));});
@@ -710,7 +715,7 @@ ApexKit.register('jungle',{
       [200,-62],[120,-30],[40,30],[-60,90],[-150,120],[-230,60],[-290,0],[-318,-100],[-280,-210],[-230,-265]];
   },
   texLen:TEXLEN,
-  propScale:.05,
+  propScale:0,
   kinds:['logger','jeep','pickup','bus','cart','jeep','pickup','logger'],
   obstKinds:['log','boulder','roots','dip','fence','log','boulder','log'],
   nObst:9,

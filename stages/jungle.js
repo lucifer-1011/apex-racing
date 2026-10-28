@@ -703,6 +703,12 @@ const COL={fern:new T.Color(0x2c4a1f),litter:new T.Color(0x6a4a24),moss:new T.Co
   bank:new T.Color(0x3d2d20),bmoss:new T.Color(0x35581f),wet:new T.Color(0x34291d),peb:new T.Color(0x8a867a)};
 
 ApexKit.register('jungle',{
+  // Winding jungle circuit: start/finish straight on the south edge, a long east sweeper, a tight hairpin on the
+  // east side, an S-bend on the north and a sweeper back down the west side. Control points in metres, driving order.
+  trackShape(st,kit){
+    return[[-190,-300],[-40,-316],[110,-312],[240,-262],[318,-170],[330,-60],[322,40],[288,72],[256,40],[250,-40],
+      [200,-62],[120,-30],[40,30],[-60,90],[-150,120],[-230,60],[-290,0],[-318,-100],[-280,-210],[-230,-265]];
+  },
   texLen:TEXLEN,
   propScale:.05,
   kinds:['logger','jeep','pickup','bus','cart','jeep','pickup','logger'],

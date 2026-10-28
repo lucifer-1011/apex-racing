@@ -330,6 +330,19 @@ ApexKit.register('offroad',{
 
   roadTexture(st,kit){return roadTex(st,kit);},
 
+  // Motocross circuit: long start/finish straight (east), fast south-east sweeper, a tight hairpin,
+  // a short chicane on the south side, a west hairpin and a return loop back to the line.
+  trackShape(st,kit){
+    return [
+      [-100,200],[0,200],[100,200],          // start/finish straight
+      [180,175],[225,110],                   // downhill sweeper
+      [215,40],[185,-5],[140,-40],           // hairpin
+      [100,-52],[60,-60],[20,-44],[-20,-60],[-70,-70], // chicane
+      [-125,-60],[-165,-25],[-165,20],       // west hairpin
+      [-135,70],[-125,135]                   // return loop
+    ];
+  },
+
   terrainFeat(x,z,rho,dn,kit){
     const f=kit.fbm,sd=37;
     // wind-blown dunes

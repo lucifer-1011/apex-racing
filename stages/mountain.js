@@ -907,6 +907,31 @@
   }
 
   ApexKit.register('mountain',{
+    // Alpine pass loop: long descent straight on the start/finish line, then a run of
+    // switchbacks climbing the north side, two sweepers and a long return straight.
+    // Fixed control points (no randomness), closed, non-self-intersecting, R = 470.
+    trackShape(st,kit){
+      return [
+        [0,-440],      // start/finish straight (heading +x)
+        [240,-430],
+        [400,-340],    // sweeper, east
+        [470,-170],
+        [460,-60],
+        [340,20],      // switchback 1 (turn back west)
+        [390,170],
+        [300,250],
+        [170,200],     // switchback 2
+        [110,110],
+        [-20,130],     // switchback 3
+        [-120,230],
+        [-250,190],
+        [-330,60],     // sweeper, west
+        [-450,-40],
+        [-470,-200],
+        [-340,-330],
+        [-150,-400]
+      ];
+    },
     get texLen(){return TEXLEN;},
     propScale:.25,
     kinds:['hatch','camper','skicar','coach','milk','tractor','hatch','skicar'],

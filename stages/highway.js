@@ -838,6 +838,17 @@ ApexKit.register('highway',{
   kinds:KINDS,
   nObst:4,
   obstKinds:['cones','drums','worksign'],
+  // Non-circular loop: a long start/finish straight on the top (east-west), a 180 degree hairpin at the
+  // east end, an S-chicane on the bottom straight and a fast sweeper at the west end.
+  // Driving order: east along the top, round the hairpin, west along the bottom.
+  trackShape(st,kit){
+    return [
+      [-700,150],[-500,150],[-300,150],[-100,150],[100,150], // top straight, start/finish at [-700,150]
+      [300,150],[430,75],[430,-75],[300,-150],               // hairpin (R 150)
+      [150,-150],[0,-190],[-150,-110],[-300,-150],           // chicane on the bottom straight
+      [-450,-150],[-620,-190],[-760,-120],[-830,0],[-780,110] // fast west sweeper back to the top
+    ];
+  },
   roadTexture(st,kit){return makeRoadTexture(st,kit);},
   terrainFeat:terrainFeatFn,
   terrainColor:terrainColorFn,

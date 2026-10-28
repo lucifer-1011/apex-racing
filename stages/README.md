@@ -30,6 +30,7 @@ built-in look is used instead. Do not rely on that; write defensive code and tes
 
 | Hook | Called | Must return |
 |---|---|---|
+| `trackShape(st, kit)` | once, before the road is built | an array of 12 to 24 control points `[x, z]` in metres around the origin, in driving order, describing a CLOSED loop. The game draws a smooth closed curve through them, scales it to the same total length as the map's built-in loop, and uses it as the road centre line. Return `null` to keep the built-in loop. See "Track shape" below. |
 | `roadTexture(st, kit)` | once, when the world is built | a `THREE.CanvasTexture` (any size up to 1024x1024, seamless top to bottom). U (x) runs across the road from left edge to right edge, V (y) along the road. Return `null` for the default. |
 | `texLen` (number property) | once | metres of road per texture repeat (default is the stage's own value). |
 | `terrainFeat(x, z, rho, dn, kit)` | per terrain vertex | extra height in metres. It is faded in automatically away from the road (zero within 8 m of the edge). `dn` = distance to the road centre line. Keep it smooth and small enough to stay driveable. |
@@ -43,6 +44,20 @@ built-in look is used instead. Do not rely on that; write defensive code and tes
 | `nObst` (number 0..30) | once | how many fixed obstacles to place on the road (default: the map's own count; highway and mountain default to 0). Obstacles are spread evenly around the lap at random lateral positions inside the road width. |
 | `obstacle(kind, rng, kit)` | once per obstacle | `{obj, hw, hl}` or `null`. Same conventions as vehicles. Kind `'log'` is special: the game places it near the road centre line with a small yaw; its long axis must lie along local x and `hw` is its half length. |
 | `kit.addUpdater(fn)` | any time | `fn(dt, nowMs)` runs every frame (animation only). It is removed automatically if it throws. |
+
+## Track shape (trackShape)
+
+This hook is the one allowed change to the road centre line, and it is the only exception to hard rule 2 for road
+position. It is used to make each map's loop non-circular, in the style of real race circuits: long straights,
+hairpins, chicanes and sweepers. Rules for the points you return:
+
+- Closed and in driving order. The first point is on the start/finish straight. The loop must NOT cross itself.
+- Smooth enough to drive: no corner tighter than about 25 m radius on the highway and mountain maps, about 15 m on
+  the off-road and jungle maps. Keep straights at least 80 m long where a straight is used.
+- Keep the loop within about 1.6 times the map's `R` of the origin, so terrain and sky stay where they were.
+- Lengths are matched automatically, so do not worry about metres; only the shape matters.
+- Use `kit.mulberry(<fixed number>)` for any randomness so every player builds the same loop.
+- Return `null` if you cannot meet these rules; the built-in loop is then used.
 
 ## The kit (`kit` / `ctx.kit`)
 

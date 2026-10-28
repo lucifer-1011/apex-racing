@@ -6,9 +6,14 @@
 // teleport, flood, impersonate other players or fake a finish time.
 const MAX_PLAYERS = 5;
 const STAGES = 4;
-// Race distance in metres per stage (laps x track length) and the fastest plausible finish in seconds.
-const STAGE_TOTAL = [8925, 6273, 5343, 4739];
+// Lap length in metres per stage, default lap count per stage, and the fastest plausible finish in seconds
+// for the default lap count. A room may choose 1 to MAX_LAPS laps; distance and minimum time scale with laps.
+const STAGE_LAP = [4462.5, 3136.5, 1781, 2369.5];
+const STAGE_LAPS = [2, 2, 3, 2];
 const STAGE_MIN_TIME = [85, 100, 100, 63];
+const MAX_LAPS = 5;
+const raceTotal = (stage, laps) => STAGE_LAP[stage] * laps;
+const raceMinTime = (stage, laps) => STAGE_MIN_TIME[stage] * laps / STAGE_LAPS[stage];
 const MAX_SPEED = 130;           // m/s: hard ceiling on reported progress growth
 const FIN_STRAGGLER_MS = 120000; // after the first finisher, others get 2 minutes
 const LOBBY_GRACE_MS = 45000;    // a dropped lobby player keeps their slot (and host role) this long so a phone app switch is harmless
@@ -75,7 +80,7 @@ export class Room {
     this.tokens = new Map();  // secret token -> public id
     this.hostId = null;
     this.phase = 'lobby'; // lobby | loading | race
-    this.cfg = { stage: 0 };
+    this.cfg = { stage: 0, laps: STAGE_LAPS[0] };
     this.loaded = new Set();
     this.finCount = 0;
     this.startAt = 0;
@@ -215,7 +220,9 @@ export class Room {
         break;
       case 'cfg':
         if (p.id === this.hostId && this.phase === 'lobby' && !this.limited(p, 'cfg', 4)) {
-          this.cfg = { stage: Math.max(0, Math.min(STAGES - 1, m.stage | 0)) };
+          const stage = Math.max(0, Math.min(STAGES - 1, m.stage | 0));
+          const laps = Number.isInteger(m.laps) ? Math.max(1, Math.min(MAX_LAPS, m.laps)) : STAGE_LAPS[stage];
+          this.cfg = { stage, laps };
           this.pushPlayers();
         }
         break;
@@ -236,14 +243,15 @@ export class Room {
   }
 
   onFinish(p, time) {
-    const stage = this.cfg.stage;
+    const stage = this.cfg.stage, laps = this.cfg.laps;
     const elapsed = (Date.now() - this.startAt) / 1000;
+    const minTime = raceMinTime(stage, laps);
     // a finish must come after the race really ran this long, with a plausible time,
     // and the player's relayed progress must have (nearly) covered the race distance
-    if (time < STAGE_MIN_TIME[stage] || time > 1800) return;
-    if (elapsed < STAGE_MIN_TIME[stage] - 3) return;
+    if (time < minTime || time > 1800) return;
+    if (elapsed < minTime - 3) return;
     if (time < elapsed - 8 && time < elapsed * 0.8) return;
-    if (p.prog < STAGE_TOTAL[stage] * 0.96) return;
+    if (p.prog < raceTotal(stage, laps) * 0.96) return;
     p.fin = Math.round(time * 100) / 100;
     this.finCount++;
     this.broadcast({ t: 'fin', i: p.id, time: p.fin, place: this.finCount });
@@ -260,7 +268,7 @@ export class Room {
       if (!q.connected) { clearTimeout(q.graceT); this.players.delete(id); this.tokens.delete(q.tok); }
     }
     for (const q of this.players.values()) { q.fin = null; q.prog = 0; q.progAt = 0; }
-    this.broadcast({ t: 'prep', stage: this.cfg.stage, players: this.roster() });
+    this.broadcast({ t: 'prep', stage: this.cfg.stage, laps: this.cfg.laps, players: this.roster() });
     this.pushPlayers();
     clearTimeout(this.timer);
     this.timer = setTimeout(() => { if (this.phase === 'loading') this.goRace(); }, 25000);

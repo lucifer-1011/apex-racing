@@ -92,7 +92,7 @@ kbd{font-family:var(--font);font-weight:700;min-width:26px;text-align:center;pad
 /* ===== touch edition ===== */
 html,body{overscroll-behavior:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
 body{--sl:max(12px,env(safe-area-inset-left,0px));--sr:max(12px,env(safe-area-inset-right,0px));--sb:max(8px,env(safe-area-inset-bottom,0px))}
-#touch{display:none;--u:clamp(38px,11.5vh,58px)}
+#touch{display:none;--u:clamp(42px,min(13vh,6.6vw),64px)}  /* bigger touch targets; the width term keeps the three clusters from colliding on narrow phones */
 body.touch #touch{display:block}
 .tb{position:absolute;pointer-events:auto;touch-action:none;user-select:none;-webkit-user-select:none;display:flex;align-items:center;justify-content:center;padding:0;border-radius:calc(var(--u)*.3);background:rgba(14,17,24,.34);border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.92);backdrop-filter:blur(2px)}
 .tb svg{width:54%;height:54%;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
@@ -101,16 +101,18 @@ body.touch #touch{display:block}
 .tb.on{background:rgba(255,90,31,.6);border-color:#ff9a6a}
 .tb.act{border-color:var(--ok);color:var(--ok)}
 .tb.hide{visibility:hidden;pointer-events:none}
-#tL{left:var(--sl);bottom:var(--sb);width:calc(var(--u)*1.45);height:calc(var(--u)*1.25)}
-#tR{left:calc(var(--sl) + var(--u)*1.45 + 8px);bottom:var(--sb);width:calc(var(--u)*1.45);height:calc(var(--u)*1.25)}
-#tCl{left:var(--sl);bottom:calc(var(--sb) + var(--u)*1.25 + 8px);width:calc(var(--u)*.95);height:calc(var(--u)*.95);border-radius:50%;border-color:rgba(111,227,255,.55);color:#9eeaff}
+#tL{left:var(--sl);bottom:var(--sb);width:calc(var(--u)*1.65);height:calc(var(--u)*1.5)}
+#tR{left:calc(var(--sl) + var(--u)*1.65 + 8px);bottom:var(--sb);width:calc(var(--u)*1.65);height:calc(var(--u)*1.5)}
+#tCl{left:var(--sl);bottom:calc(var(--sb) + var(--u)*1.5 + 8px);width:calc(var(--u)*.95);height:calc(var(--u)*.95);border-radius:50%;border-color:rgba(111,227,255,.55);color:#9eeaff}
 #tTh{right:var(--sr);bottom:var(--sb);width:calc(var(--u)*1.3);height:calc(var(--u)*1.9);background:rgba(255,90,31,.26);border-color:rgba(255,140,90,.65);color:#ffb08a}
-#tFb{right:calc(var(--sr) + var(--u)*1.3 + 8px);bottom:var(--sb);width:calc(var(--u)*1.05);height:calc(var(--u)*1.05);border-radius:50%;border-color:rgba(255,95,95,.6);color:#ff9a9a}
-#tRb{right:calc(var(--sr) + var(--u)*1.3 + 8px + var(--u)*.075);bottom:calc(var(--sb) + var(--u)*1.05 + 8px);width:calc(var(--u)*.9);height:calc(var(--u)*.9);border-radius:50%;border-color:rgba(255,95,95,.45);color:#ff9a9a}
+#tFb{right:calc(var(--sr) + var(--u)*1.3 + 8px);bottom:var(--sb);width:calc(var(--u)*1.45);height:calc(var(--u)*1.45);border-radius:50%;border-color:rgba(255,95,95,.6);color:#ff9a9a}
+#tRb{right:calc(var(--sr) + var(--u)*1.3 + 8px + var(--u)*.1);bottom:calc(var(--sb) + var(--u)*1.45 + 8px);width:calc(var(--u)*1.25);height:calc(var(--u)*1.25);border-radius:50%;border-color:rgba(255,95,95,.45);color:#ff9a9a}
 #tGu{right:var(--sr);bottom:calc(var(--sb) + var(--u)*1.9 + 8px);width:calc(var(--u)*.8);height:calc(var(--u)*.8);border-radius:50%}
 #tGd{right:calc(var(--sr) + var(--u)*.8 + 6px);bottom:calc(var(--sb) + var(--u)*1.9 + 8px);width:calc(var(--u)*.8);height:calc(var(--u)*.8);border-radius:50%}
-#tUtil{position:absolute;left:50%;transform:translateX(-50%);bottom:var(--sb);display:flex;gap:6px}
-#tUtil .tb{position:static;width:calc(var(--u)*.88);height:calc(var(--u)*.88);border-radius:50%}
+#tUtil{position:absolute;left:calc(50% + 30px);transform:translateX(-50%);bottom:var(--sb);display:flex;align-items:flex-end;gap:5px}  /* shifted right so the bigger lean buttons keep clear of it */
+#tUtil .tb{position:static;width:calc(var(--u)*.76);height:calc(var(--u)*.76);border-radius:50%}
+#tUtil #tHorn{width:calc(var(--u)*.95);height:calc(var(--u)*.95);color:#ffd166;border-color:rgba(255,209,102,.7)}  /* horn: bigger and amber so it is not mistaken for the mute button */
+.tb .mx{display:none}.tb.off .mx{display:block;stroke:var(--bad)}.tb.off .wv{opacity:.25}
 #tPause{right:calc(var(--sr) + 92px);top:8px;width:36px;height:36px;border-radius:50%}
 body.touch #bars,body.touch #hint,body.touch #hMode,body.touch #hSub{display:none}
 body.touch #gauge{left:50%;right:auto;bottom:auto;top:4px;transform:translateX(-50%);width:190px;height:58px;max-width:none}
@@ -384,12 +386,12 @@ body.touch #board div{font-size:12px;padding:1px 6px}
     <div id="tUtil">
     <button class="tb" id="tIgn" data-k="KeyI" aria-label="Engine start or stop"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v8"/><path d="M6.6 6.6a8 8 0 1 0 10.8 0"/></svg></button>
     <button class="tb" id="tLamp" data-k="KeyL" aria-label="Headlight"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.4"/><path d="M12 3v2.4M12 18.6V21M3 12h2.4M18.6 12H21M5.6 5.6l1.7 1.7M16.7 16.7l1.7 1.7M18.4 5.6l-1.7 1.7M7.3 16.7l-1.7 1.7"/></svg></button>
-    <button class="tb" id="tHorn" data-k="KeyH" data-h="1" aria-label="Horn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10v4h3l6 4V6L7 10z"/><path d="M16.2 9a4.2 4.2 0 0 1 0 6M18.8 6.4a8 8 0 0 1 0 11.2"/></svg></button>
+    <button class="tb" id="tHorn" data-k="KeyH" data-h="1" aria-label="Horn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 9.5l11-5v15l-11-5z"/><path d="M6.5 15.5l1.4 4.5h2.8l-1-4"/><path d="M18 8l2.5-1.5M18.5 12H21.5M18 16l2.5 1.5"/></svg></button>
     <button class="tb" id="tHaz" data-k="KeyX" aria-label="Hazard lights"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4l9 16H3z"/><path d="M12 10v4"/><circle class="f" cx="12" cy="17" r=".9"/></svg></button>
     <button class="tb" id="tCam" data-k="KeyV" aria-label="Camera"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-2h6l2 2h3v11H4z"/><circle cx="12" cy="13" r="3.2"/></svg></button>
     <button class="tb" id="tRst" data-k="KeyR" aria-label="Reset to road"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12a7 7 0 1 0 2.2-5.1"/><path d="M5 4.5v4.5h4.5"/></svg></button>
     <button class="tb" id="tAuto" data-k="KeyT" aria-label="Automatic or manual gearbox"><b>A</b></button>
-    <button class="tb" id="tMute" data-k="KeyM" aria-label="Mute"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10v4h3l5 4V6L7 10z"/><path d="M16 9.5a4 4 0 0 1 0 5"/></svg></button>
+    <button class="tb" id="tMute" data-k="KeyM" aria-label="Sound on or off"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10v4h3l5 4V6L7 10z"/><path class="wv" d="M15.5 9.5a3.5 3.5 0 0 1 0 5M18 7a7 7 0 0 1 0 10"/><path class="mx" d="M3.5 3.5l17 17"/></svg></button>
     </div>
   </div>
   <div id="hint">A / D lean · W throttle · S front brake · Space rear brake · hold Shift = clutch · E gear up · Q gear down · P pause</div>
@@ -409,6 +411,8 @@ body.touch #board div{font-size:12px;padding:1px 6px}
 </div></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" integrity="sha384-CI3ELBVUz9XQO+97x6nwMDPosPR5XvsxW2ua7N1Xeygeh1IxtgqtCkGfQY9WWdHu" crossorigin="anonymous"></script>
+<script src="assets/trees/trees.js"></script>
+<script src="assets/bikes/moto.js"></script>
 <script>
 (function(){
 'use strict';
@@ -437,10 +441,12 @@ const BIKES={
   gears:6,idle:1300,red:13500,peakT:120,curve:[[0,.35],[.25,.55],[.5,.78],[.7,1],[.85,.97],[1,.82]],mass:285,R:.31,v1:20.8,vTop:82,cdA:.36,lean:.95,tyre:1.3,dirt:.7,brake:1.0,landLimit:9,aiAcc:9,cf:2,
   col1:0xf4f6fa,col2:0x1c69d4,col3:0xd8222a,alt:[0x16181d,0x00d1ff,0xffffff],suit:0x1c69d4,helmet:0xf4f6fa,stats:[95,90,40,100],
   cfg:{wb:1.42,Rf:.30,Rr:.31,tubeF:.062,tubeR:.075,tread:null,N:V(0,.86,.52),bar:{w:.3,y:.06,z:-.12},pivotZ:-.2,hip:V(0,.9,-.3),shoulder:V(0,1.2,.05),peg:[.23,.4,-.17],kneeUp:.14,kneeFwd:.16,headFwd:.08,seat:[.22,.05,.45,0,.82,-.2],engine:[.26,.34,.42,0,.48,0],tail:[0,.9,-.93],indF:[.2,.8,.78],indR:[.12,.9,-.9],eye:V(0,1.3,.25)}},
- cruiser:{name:'Iron Stallion 1200',cls:'Cruiser · Harley / Royal Enfield inspired',desc:'Heavy V-twin with torque everywhere. Leans until the floorboards scrape. Built for mountain sweepers.',
+ cruiser:{name:'Iron Stallion 1200',cls:'Retro roadster · Bonneville / Royal Enfield inspired',desc:'Heavy twin with torque everywhere. Leans until the footpegs scrape. Built for mountain sweepers.',
   gears:5,idle:900,red:6200,peakT:125,curve:[[0,.6],[.2,.85],[.5,1],[.75,.9],[1,.7]],mass:410,R:.34,v1:14.5,vTop:49,cdA:.65,lean:.58,tyre:1.0,dirt:.75,brake:.75,landLimit:8,aiAcc:5.5,cf:1,
   col1:0x6e1722,col2:0x111111,col3:0xc9a24a,alt:[0x1d3a2a,0xe8d9a8,0x111111],suit:0x3a2b20,helmet:0x151515,stats:[60,45,85,55],
-  cfg:{wb:1.65,Rf:.34,Rr:.34,tubeF:.07,tubeR:.095,tread:null,N:V(0,.98,.62),bar:{w:.46,y:.16,z:-.24},pivotZ:-.25,hip:V(0,.8,-.34),shoulder:V(0,1.36,-.3),peg:[.38,.28,.16],kneeUp:.1,kneeFwd:.18,headFwd:-.02,seat:[.22,.06,.34,0,.76,-.3],engine:[.3,.28,.34,0,.5,.05],tail:[0,.72,-1.02],indF:[.25,.9,.8],indR:[.2,.7,-1.0],eye:V(0,1.45,-.25)}},
+  cfg:{wb:1.65,Rf:.34,Rr:.34,tubeF:.07,tubeR:.095,tread:null,N:V(0,.98,.62),bar:{w:.46,y:.16,z:-.24},pivotZ:-.25,hip:V(0,.8,-.34),shoulder:V(0,1.36,-.3),peg:[.38,.28,.16],kneeUp:.1,kneeFwd:.18,headFwd:-.02,seat:[.22,.06,.34,0,.76,-.3],engine:[.3,.28,.34,0,.5,.05],tail:[0,.72,-1.02],indF:[.25,.9,.8],indR:[.2,.7,-1.0],eye:V(0,1.45,-.25)},
+  // rider pose on the retro roadster model (assets/bikes/moto.js); MotoKit merges it into cfg when the model loads
+  fit:{hip:V(0,.92,-.46),shoulder:V(0,1.42,-.28),peg:[.2,.3,-.24],kneeUp:.12,kneeFwd:.2,headFwd:.02,eye:V(0,1.55,-.15)}},
  off:{name:'Dune Raider 450',cls:'Off-road · motocross',desc:'Featherweight with long-travel suspension. Soaks up jumps and whoops, grips loose dirt.',
   gears:6,idle:1700,red:11500,peakT:52,curve:[[0,.4],[.3,.65],[.55,.95],[.7,1],[.9,.9],[1,.7]],mass:190,R:.37,v1:11.5,vTop:41,cdA:.5,lean:.85,tyre:.9,dirt:1.25,brake:.85,landLimit:15,aiAcc:9,cf:.5,
   col1:0xff6a13,col2:0xffffff,col3:0x111111,alt:[0x1a73e8,0xffffff,0x111111],suit:0xff6a13,helmet:0xffffff,stats:[55,95,15,45],
@@ -454,27 +460,33 @@ for(const k in BIKES){const b=BIKES[k];b.ratios=[0];for(let i=1;i<=b.gears;i++){
 function curveAt(c,x){if(x<=c[0][0])return c[0][1];for(let i=1;i<c.length;i++)if(x<=c[i][0]){const t=(x-c[i-1][0])/(c[i][0]-c[i-1][0]);return lerp(c[i-1][1],c[i][1],t);}return c[c.length-1][1];}
 
 /* ================= STAGES ================= */
+// models: tree models scattered beside the road, [{t:tree name (assets/trees), n:count on desktop (60% on touch), a:min and b:max metres from the road edge,
+// s:[min,max] scale, c:[tint colours]}]; see TreeKit and placeModelTrees.
 const STAGES=[
  {id:'highway',name:'Skyline Highway',sub:'4-lane traffic run',bike:'sport',laps:2,seed:11,
   R:700,harm:[[2,.09,.4],[3,.05,2.1],[5,.015,.9]],elev:[[1,6,.5],[2,3.5,2]],elevBase:20,half:7.6,wall:8.05,curb:.25,surf:'asphalt',
   lanes:[{off:-5.4,dir:1,speed:37},{off:-1.8,dir:1,speed:31},{off:1.8,dir:1,speed:26},{off:5.4,dir:1,speed:21}],gap:[170,330],kinds:['car','car','car','van','truck'],
   aiLanes:[-5.4,-1.8,1.8,5.4],aiPref:1,startP:-1.8,startAI:1.8,aiSkill:1,
-  sky:[0x4f9dff,0xcfe4f7],fog:[0xc3d9ee,.00075],sun:[0xfff1d6,[.5,.75,.35],1.0],hemi:[0xbfd8ff,0x5a6b4a,.8],cell:10,margin:420,blend:18,texLen:16,dust:0xb8b8b0},
+  sky:[0x4f9dff,0xcfe4f7],fog:[0xc3d9ee,.00075],sun:[0xfff1d6,[.5,.75,.35],1.0],hemi:[0xbfd8ff,0x5a6b4a,.8],cell:10,margin:420,blend:18,texLen:16,dust:0xb8b8b0,
+  models:[{t:'Walnut_L',n:60,a:12,b:120,s:[.9,1.3],c:[0xffffff,0xf2e6d0,0xe8d9bf]},{t:'Sonnerat',n:20,a:14,b:110,s:[.9,1.3]}]},
  {id:'mountain',name:'Alpine Pass & Valley',sub:'Cliffs, rails and a lake',bike:'cruiser',laps:2,seed:23,
   R:470,harm:[[2,.12,1],[3,.09,.2],[5,.055,2],[7,.03,.7],[11,.01,1.4]],elev:[[1,30,.3],[2,18,1.9],[3,9,.5]],elevBase:75,half:4.7,wall:5.1,curb:.25,surf:'asphalt',
   lanes:[{off:2.3,dir:1,speed:15},{off:-2.3,dir:-1,speed:19}],gap:[260,520],kinds:['car','car','van','truck'],
   aiLanes:[2.3,-2.3],aiPref:0,startP:2.3,startAI:.6,aiSkill:.95,
-  sky:[0x39508f,0xffb98a],fog:[0xe2b49c,.0011],sun:[0xffc58a,[.8,.28,-.4],1.1],hemi:[0x9db2dc,0x6a5a4a,.95],cell:9,margin:700,blend:26,verge:1,texLen:16,dust:0xa09a90},
+  sky:[0x39508f,0xffb98a],fog:[0xe2b49c,.0011],sun:[0xffc58a,[.8,.28,-.4],1.1],hemi:[0x9db2dc,0x6a5a4a,.95],cell:9,margin:700,blend:26,verge:1,texLen:16,dust:0xa09a90,
+  models:[{t:'Bark___S',n:90,a:9,b:150,s:[.9,1.4],c:[0xffffff,0xe6efe0,0xd8e6d2]},{t:'Bark___0',n:50,a:10,b:170,s:[.9,1.3],c:[0xffffff,0xe6efe0]},{t:'Walnut_L',n:12,a:14,b:110,s:[.8,1.1]},{t:'Oak_Leav',n:40,a:7,b:80,s:[1,1.7]}]},
  {id:'offroad',name:'Canyon Motocross',sub:'Jumps, whoops, boulders',bike:'off',laps:3,seed:37,
   R:260,harm:[[2,.16,.3],[3,.12,1.5],[4,.07,.6],[6,.035,2.2],[9,.018,.4]],elev:[[1,6,0],[2,5,1],[3,3,.5]],elevBase:15,half:6,wall:14.4,curb:.1,surf:'dirt',
   lanes:[],gap:[0,0],kinds:[],obst:['rock','rock','tire','rock'],nObst:14,
   aiLanes:[-3.4,0,3.4],aiPref:1,startP:-2.2,startAI:2.2,aiSkill:1,
-  sky:[0x5fb0ff,0xffe2b4],fog:[0xf0d6a8,.0011],sun:[0xfff0d0,[.3,.9,.2],1.15],hemi:[0xcfe2ff,0x9a7a52,.8],cell:6,margin:380,blend:20,texLen:12,dust:0xd7b07a},
+  sky:[0x5fb0ff,0xffe2b4],fog:[0xf0d6a8,.0011],sun:[0xfff0d0,[.3,.9,.2],1.15],hemi:[0xcfe2ff,0x9a7a52,.8],cell:6,margin:380,blend:20,texLen:12,dust:0xd7b07a,
+  models:[{t:'Sonnerat',n:30,a:14,b:220,s:[.9,1.4]},{t:'Oak_Leav',n:60,a:10,b:160,s:[.9,1.5]}]},
  {id:'jungle',name:'Amazon Trail',sub:'Mud, mist and logging trucks',bike:'adv',laps:2,seed:51,
   R:350,harm:[[2,.15,2.3],[3,.1,.8],[4,.07,1.9],[6,.04,.1],[9,.015,.5]],elev:[[1,14,1.3],[2,10,.2],[3,5,2.4]],elevBase:40,half:3.9,wall:5.2,curb:.12,surf:'dirt',
   lanes:[{off:1.95,dir:1,speed:11},{off:-1.95,dir:-1,speed:14}],gap:[260,520],kinds:['jeep','truck','jeep'],obst:['log','log','rock'],nObst:9,
   aiLanes:[1.95,-1.95],aiPref:0,startP:1.2,startAI:-.9,aiSkill:.95,
-  sky:[0x7fa192,0xb8cdbd],fog:[0x9db5a4,.0068],sun:[0xe8f0d0,[.3,.7,.5],.85],hemi:[0xa9c9b0,0x2a3a20,.85],cell:7,margin:380,blend:14,texLen:12,dust:0x6a5a40}
+  sky:[0x7fa192,0xb8cdbd],fog:[0x9db5a4,.0068],sun:[0xe8f0d0,[.3,.7,.5],.85],hemi:[0xa9c9b0,0x2a3a20,.85],cell:7,margin:380,blend:14,texLen:12,dust:0x6a5a40,
+  models:[{t:'Mossy_Tr',n:50,a:9,b:120,s:[.9,1.25]},{t:'Bottom_T',n:25,a:14,b:150,s:[.8,1.1]},{t:'Bark___1',n:35,a:10,b:130,s:[.9,1.2]},{t:'Oak_Leav',n:90,a:5,b:50,s:[1,1.8]}]}
 ];
 const modeName=id=>id==='multi'?'Multiplayer':MODES.find(x=>x.id===id).name;
 const MAPUI={highway:{c:'#4f9dff',file:'highway',facts:'4.5 km \u00b7 2 laps \u00b7 heavy traffic'},mountain:{c:'#ff9a5c',file:'mountain',facts:'3.1 km \u00b7 2 laps \u00b7 two-way road'},offroad:{c:'#ffb347',file:'offroad',facts:'1.8 km \u00b7 3 laps \u00b7 jumps'},jungle:{c:'#5fcf86',file:'jungle',facts:'2.4 km \u00b7 2 laps \u00b7 mud & mist'}};
@@ -514,13 +526,15 @@ function rod(par,m,a,b,r){const d=b.clone().sub(a),len=d.length();const o=mesh(g
 function fender(par,m,R,arc,pos,tube,wide){const g=new THREE.Group();g.add(mesh(geo('TorusGeometry',R,tube,5,20,arc),m,null,[0,0,PI/2-arc/2],[1,1,wide]));g.rotation.y=PI/2;g.position.set(pos[0],pos[1],pos[2]);par.add(g);return g;}
 
 function makeMats(S,o){
-  if(o.ghost){const g=new THREE.MeshBasicMaterial({color:0x8fe6ff,transparent:true,opacity:.38,depthWrite:false});return{paint:g,accent:g,trim:g,dark:g,chrome:g,tire:g,glass:g,seat:g,suit:g,helmet:g,tail:g,head:g,gold:g,ind:[g,g,g,g]};}
+  if(o.ghost){const g=new THREE.MeshBasicMaterial({color:0x8fe6ff,transparent:true,opacity:.38,depthWrite:false});return{paint:g,accent:g,trim:g,dark:g,chrome:g,tire:g,glass:g,seat:g,suit:g,helmet:g,visor:g,glove:g,boot:g,tail:g,head:g,gold:g,metal:g,plate:g,ind:[g,g,g,g]};}
   const c=o.color!==undefined?[o.color,S.col2,S.col3]:(o.alt?S.alt:[S.col1,S.col2,S.col3]);
   const st=(col,r,m)=>new THREE.MeshStandardMaterial({color:col,roughness:r,metalness:m});
   return{paint:st(c[0],.28,.35),accent:st(c[1],.35,.25),trim:st(c[2],.35,.25),dark:st(0x15171b,.6,.3),
    chrome:new THREE.MeshStandardMaterial({color:0xdfe3ea,roughness:.2,metalness:.95,envMapIntensity:1.3}),tire:st(0x101010,.95,0),
    glass:new THREE.MeshStandardMaterial({color:0x223344,transparent:true,opacity:.45,roughness:.1}),seat:st(0x1a1a1a,.85,0),
-   suit:st(o.alt?0x222222:S.suit,.7,0),helmet:st(o.color!==undefined?o.color:(o.alt?0x00d1ff:S.helmet),.3,.2),gold:st(0xd7a83a,.35,.6),
+   suit:st(o.alt?0x222222:S.suit,.6,.05),helmet:st(o.color!==undefined?o.color:(o.alt?0x00d1ff:S.helmet),.25,.2),gold:st(0xd7a83a,.35,.6),
+   visor:new THREE.MeshStandardMaterial({color:0x0b0e14,roughness:.1,metalness:.7,envMapIntensity:1.4}),glove:st(0x17191e,.55,.1),boot:st(0x1b1d22,.6,.12),
+   metal:st(0xa7acb3,.34,.85),plate:st(0xa39c88,.7,0),           // brushed alloy and number plate (Iron Stallion model)
    tail:new THREE.MeshBasicMaterial({color:0x5a1010}),head:new THREE.MeshBasicMaterial({color:0xcfc7a0}),
    ind:[0,1,2,3].map(()=>new THREE.MeshBasicMaterial({color:0x4a3200}))};
 }
@@ -537,23 +551,51 @@ function wheel(R,tube,tread,M,disc){
     im.castShadow=true;im.frustumCulled=false;g.add(im);}
   return g;
 }
+// Rider geometry helpers: a tapered limb between two points (radius ra at a, rb at b) and an ellipsoid whose long axis can follow a direction
+function limb(par,m,a,b,ra,rb,seg){
+  const d=b.clone().sub(a),len=d.length(),o=mesh(geo('CylinderGeometry',rb,ra,len,seg||10),m);
+  o.position.copy(a).addScaledVector(d,.5);o.quaternion.setFromUnitVectors(V(0,1,0),d.normalize());par.add(o);return o;
+}
+function blob(par,m,p,rx,ry,rz,along){
+  const o=mesh(geo('SphereGeometry',1,12,8),m,p.toArray?p.toArray():p,null,[rx,ry,rz]);
+  if(along)o.quaternion.setFromUnitVectors(V(0,1,0),along);par.add(o);return o;
+}
+// The rider is a static pose built to the bike's config (hip, shoulder, grips, pegs, knee bend, head position): pelvis, belly and chest,
+// shoulder pads, tapered arms with cuffed gloves, thighs and shins with knee pads, boots, neck and a helmet with a glossy visor.
+// All the pieces are merged into one mesh per material at the end, so a rider costs about 7 draw calls whatever its detail.
 function addRider(b,C){
   const M=b.M,R=b.rider;b.body.add(R);
-  const hip=C.hip,sh=C.shoulder;
-  rod(R,M.suit,hip,sh,.125);ell(R,M.suit,.14,.12,.14,hip.toArray());
+  const hip=C.hip,sh=C.shoulder,dir=sh.clone().sub(hip).normalize(),L=sh.distanceTo(hip);
+  blob(R,M.suit,hip,.16,.11,.15);
+  limb(R,M.suit,hip.clone().addScaledVector(dir,.04),hip.clone().addScaledVector(dir,L*.6),.125,.14,12);
+  blob(R,M.suit,hip.clone().addScaledVector(dir,L*.8),.19,.17,.14,dir);
   for(const sx of[-1,1]){
     const shoulder=sh.clone().add(V(sx*.17,0,0));
     const grip=C.N.clone().add(V(sx*C.bar.w,C.bar.y,C.bar.z));
     const elbow=shoulder.clone().lerp(grip,.5).add(V(sx*.1,-.05,0));
-    rod(R,M.suit,shoulder,elbow,.045);rod(R,M.suit,elbow,grip,.04);ell(R,M.dark,.045,.045,.045,grip.toArray());
+    const fdir=grip.clone().sub(elbow).normalize(),wrist=grip.clone().addScaledVector(fdir,-.07);
+    blob(R,M.suit,shoulder,.07,.07,.07);blob(R,M.accent,shoulder.clone().add(V(sx*.01,.035,0)),.075,.045,.075);
+    limb(R,M.suit,shoulder,elbow,.055,.045,10);blob(R,M.suit,elbow,.048,.048,.048);
+    limb(R,M.suit,elbow,wrist,.045,.035,10);limb(R,M.accent,wrist.clone().addScaledVector(fdir,-.04),wrist.clone().addScaledVector(fdir,.02),.044,.044,10);
+    blob(R,M.glove,grip,.05,.045,.06);
     const hp=hip.clone().add(V(sx*.1,0,0)),foot=V(sx*C.peg[0],C.peg[1],C.peg[2]);
-    const knee=hp.clone().lerp(foot,.5).add(V(sx*.07,C.kneeUp,C.kneeFwd));
-    rod(R,M.suit,hp,knee,.07);rod(R,M.suit,knee,foot,.055);box(R,M.dark,.09,.07,.24,[foot.x,foot.y,foot.z+.06]);
+    const knee=hp.clone().lerp(foot,.5).add(V(sx*.07,C.kneeUp,C.kneeFwd)),ankle=foot.clone().add(V(0,.1,-.04));
+    limb(R,M.suit,hp,knee,.09,.066,12);blob(R,M.suit,knee,.07,.07,.07);blob(R,M.accent,knee.clone().add(V(sx*.05,0,.01)),.022,.05,.05);
+    limb(R,M.suit,knee,ankle,.064,.048,10);
+    limb(R,M.boot,foot.clone().add(V(0,.03,0)),ankle.clone().add(V(0,.06,0)),.056,.056,10);
+    blob(R,M.boot,foot.clone().add(V(0,.035,.06)),.055,.055,.12);box(R,M.dark,.1,.03,.27,[foot.x,foot.y-.02,foot.z+.07]);
   }
-  const dir=sh.clone().sub(hip).normalize();
   const head=sh.clone().addScaledVector(dir,.19).add(V(0,.02,C.headFwd));
-  b.helmet=new THREE.Group();b.helmet.position.copy(head);R.add(b.helmet);
-  ell(b.helmet,M.helmet,.125,.125,.14,[0,0,0]);box(b.helmet,M.dark,.2,.06,.1,[0,.01,.1]);
+  limb(R,M.suit,sh,head.clone().add(V(0,-.07,-.02)),.06,.05,10);
+  const H=b.helmet=new THREE.Group();H.position.copy(head);R.add(H);
+  blob(H,M.helmet,V(0,0,0),.125,.13,.15);
+  // glossy visor: a band of a slightly bigger sphere over the face; chin bar below it
+  const vis=mesh(geo('SphereGeometry',1,14,8,PI/2-.95,1.9,1.2,.62),M.visor,null,null,[.129,.134,.154]);H.add(vis);
+  blob(H,M.helmet,V(0,-.1,.075),.085,.06,.095);
+  blob(H,M.accent,V(0,.1,-.01),.02,.05,.15);                              // racing stripe over the crown
+  if(b.kind==='off'){box(H,M.helmet,.2,.015,.13,[0,.075,.15],[-.3,0,0]);}   // motocross peak
+  if(b.kind==='sport'){blob(H,M.helmet,V(0,.04,-.15),.07,.05,.06);}        // rear spoiler bump
+  mergeByMaterial(R);mergeByMaterial(H);
 }
 const EXTRA={
  sport(b,M,body,steer,C){
@@ -593,19 +635,131 @@ const EXTRA={
   rod(body,M.chrome,V(.27,.35,.35),V(.28,.45,-.9),.05);
  }
 };
+/* ================= MODEL BIKE (Iron Stallion) ================= */
+// The cruiser is drawn from a retro roadster model: assets/bikes/moto.js (window.APEX_MOTO, made by tools/convert_moto.py).
+// It holds two LODs (`hi` desktop, `lo` touch) of quantised meshes, one per part (body, steer, fw, rw) and material slot, plus
+// anchor points measured on the model (axles, steering pivot and rake, lens, shocks, grips, tank...). Per mesh the base64 blob
+// holds positions (uint16 x3, scaled into min..max), normals (int8 x3, padded to an even length) and triangle indices (uint16).
+// If the file is missing or broken, ok stays false and buildBike() keeps drawing the old procedural cruiser.
+const MotoKit=(()=>{
+  const D=window.APEX_MOTO,lod=TOUCH?'lo':'hi';let ok=false,parts=null;
+  function decode(d){
+    const bin=atob(d.b),bytes=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);
+    const n=d.v,q=new Uint16Array(bytes.buffer,0,n*3),nq=new Int8Array(bytes.buffer,n*6,n*3),iq=new Uint16Array(bytes.buffer,n*6+((n*3+1)&~1),d.i);
+    const pos=new Float32Array(n*3),nor=new Float32Array(n*3);
+    for(let k=0;k<n*3;k++){const a=k%3;pos[k]=d.min[a]+q[k]*(d.max[a]-d.min[a])/65535;nor[k]=nq[k]/127;}
+    const g=new THREE.BufferGeometry();
+    g.setAttribute('position',new THREE.BufferAttribute(pos,3));g.setAttribute('normal',new THREE.BufferAttribute(nor,3));
+    g.setIndex(new THREE.BufferAttribute(iq.slice(),1));g.computeBoundingSphere();
+    return g;
+  }
+  try{
+    if(D&&D.anchors&&D.lod&&D.lod[lod]){
+      // geometry is decoded once and shared by every bike that uses the model (player, rival, ghost, remote riders, showroom)
+      parts=D.lod[lod].map(m=>({p:m.p,s:m.s,g:decode(m)}));
+      const A=D.anchors,C=BIKES.cruiser.cfg,G=A.grip[0];
+      // the visual config follows the model: wheelbase, wheel size, steering pivot and grips; the rider pose comes from BIKES.cruiser.fit
+      Object.assign(C,{wb:A.wb,Rf:A.R,Rr:A.R,N:V(...A.pivot),bar:{w:G[0]-.06,y:G[1]-A.pivot[1],z:G[2]-A.pivot[2]}},BIKES.cruiser.fit);
+      ok=true;
+    }
+  }catch(e){console.warn('Iron Stallion model not usable, using the procedural cruiser',e);}
+  return{ok:()=>ok,parts:()=>parts,A:()=>D.anchors,lod};
+})();
+// A coil spring along +y (radius r, height h, n turns) for the rear shocks
+class Helix extends THREE.Curve{
+  constructor(r,h,n){super();this.r=r;this.h=h;this.n=n;}
+  getPoint(t,o){const a=t*this.n*TAU;return(o||new THREE.Vector3()).set(Math.cos(a)*this.r,t*this.h,Math.sin(a)*this.r);}
+}
+// Builds the model bike into b (from buildBike): the model's meshes painted with the bike's materials, then the detail the source
+// lacks (headlight bezel and glass, mirrors, fork gaiters, shock springs, swingarm, frame rails, chain and sprockets, brake discs
+// and calipers, footpegs, kick stand, fuel cap, tank badges, rear indicators). Everything is built in bike space, moved into its
+// part (steer, front wheel, rear wheel) and merged into one mesh per material per part. Touch devices get fewer segments.
+function buildMoto(b,M){
+  const A=MotoKit.A(),body=b.body,v=a=>V(a[0],a[1],a[2]),sg=(h,l)=>TOUCH?l:h;
+  // parts: the steer group hangs in a `head` group tilted to the rake, so the bars and forks turn about the real steering axis
+  const head=new THREE.Group();head.position.copy(v(A.pivot));head.rotation.x=A.rake;body.add(head);head.add(b.steer);
+  b.fw=new THREE.Group();b.fw.position.copy(v(A.fwPos));b.steer.add(b.fw);
+  b.rw=new THREE.Group();b.rw.position.copy(v(A.axleR));body.add(b.rw);
+  const SLOT={paint:M.paint,accent:M.accent,trim:M.trim,dark:M.dark,metal:M.metal,chrome:M.chrome,tire:M.tire,seat:M.seat,plate:M.plate,
+   gauge:M.visor,head:M.head,tail:M.tail,indFL:M.ind[0],indFR:M.ind[1]};
+  const part={body,steer:b.steer,fw:b.fw,rw:b.rw};
+  for(const m of MotoKit.parts())part[m.p].add(mesh(m.g,SLOT[m.s]));
+  // detail, in bike space: sB turns with the bars, fB/rB spin with the wheels, the rest stays on the body
+  const sB=new THREE.Group(),fB=new THREE.Group(),rB=new THREE.Group();body.add(sB,fB,rB);
+  const disc=(par,m,r,h,n,p,axis)=>{const o=mesh(geo('CylinderGeometry',r,r,h,n),m,p);o.quaternion.setFromUnitVectors(V(0,1,0),axis||V(1,0,0));par.add(o);return o;};
+  // tube between two points, open ended unless capped (the ends are too thin to see)
+  const tube=(par,m,a,c,r,n,capped)=>{const d=c.clone().sub(a);const o=mesh(geo('CylinderGeometry',r,r,d.length(),n||sg(7,5),1,!capped),m);o.position.copy(a).addScaledVector(d,.5);o.quaternion.setFromUnitVectors(V(0,1,0),d.normalize());par.add(o);return o;};
+  // headlight: chrome bezel ring and a domed glass lens over the lit lens of the model
+  const lens=v(A.lens),lr=A.lensR;
+  sB.add(mesh(geo('TorusGeometry',lr+.004,.011,sg(4,3),sg(20,12)),M.chrome,[lens.x,lens.y,lens.z+.004]));
+  sB.add(mesh(geo('SphereGeometry',1,sg(16,10),sg(3,2),0,TAU,0,PI/2),M.glass,[lens.x,lens.y,lens.z+.002],[PI/2,0,0],[lr,lr*.3,lr]));
+  // mirrors on stalks near the grips
+  for(const g of A.grip){const sx=Math.sign(g[0]),base=V(g[0]-sx*.1,g[1]+.012,g[2]+.01),tip=V(g[0]+sx*.01,g[1]+.17,g[2]-.02);
+    tube(sB,M.chrome,base,tip,.007,sg(6,4));disc(sB,M.chrome,.05,.014,sg(10,7),[tip.x,tip.y+.03,tip.z],V(0,.15,-1).normalize());
+    disc(sB,M.visor,.043,.016,sg(10,7),[tip.x,tip.y+.03,tip.z-.002],V(0,.15,-1).normalize());}           // chrome back, dark glass
+  // fork gaiters: ribbed rubber boots over the stanchion/slider joint
+  const ribs=[],nr=sg(8,4);for(let i=0;i<=nr;i++)ribs.push(new THREE.Vector2(A.forkR+(i%2?.011:.004),i/nr*.15));
+  const gaiter=_g['moto:gaiter'+nr]||(_g['moto:gaiter'+nr]=new THREE.LatheGeometry(ribs,sg(10,6)));
+  for(let k=0;k<2;k++){const t=v(A.forkTop[k]),bt=v(A.forkBot[k]),ax=t.clone().sub(bt).normalize(),o=mesh(gaiter,M.tire);
+    o.position.copy(bt.clone().lerp(t,.28));o.quaternion.setFromUnitVectors(V(0,1,0),ax);sB.add(o);}
+  // front brake: disc on the left of the hub (+x), gold caliper on the left fork slider behind the axle
+  const aF=v(A.axleF),aR=v(A.axleR),dx=.074;
+  disc(fB,M.metal,.165,.005,sg(28,16),[dx,aF.y,aF.z]);disc(fB,M.dark,.07,.007,sg(12,8),[dx,aF.y,aF.z]);
+  const fk=v(A.forkBot[0]).lerp(v(A.forkTop[0]),.06);box(sB,M.gold,.03,.11,.06,[dx+.004,aF.y+.1,aF.z-.12],[.7,0,0]);tube(sB,M.dark,fk,V(dx+.004,aF.y+.1,aF.z-.12),.01);
+  // rear: disc on the left, sprocket on the right with the chain to the gearbox sprocket; gold caliper on the swingarm
+  disc(rB,M.metal,.13,.005,sg(24,14),[dx,aR.y,aR.z]);box(body,M.gold,.03,.1,.055,[dx+.004,aR.y+.11,aR.z+.07],[-.5,0,0]);
+  const spR=.11,spF=.045,fs=V(-.086,.36,-.25),rs=V(-dx,aR.y,aR.z);
+  disc(rB,M.dark,spR,.008,sg(20,12),[rs.x,rs.y,rs.z]);disc(rB,M.metal,.06,.01,sg(14,8),[rs.x,rs.y,rs.z]);
+  disc(body,M.dark,spF,.01,sg(14,8),[fs.x,fs.y,fs.z]);
+  for(const s of[1,-1])tube(body,M.dark,V(fs.x,fs.y+s*spF,fs.z),V(rs.x,rs.y+s*spR,rs.z),.008,sg(6,4));
+  // swingarm from the pivot behind the engine to the rear axle, with a cross brace; frame rails under the seat
+  const piv=V(0,.37,A.engMin[2]+.12);
+  for(const sx of[-1,1]){tube(body,M.dark,V(sx*.1,piv.y,piv.z),V(sx*.1,aR.y,aR.z),.019);
+    tube(body,M.dark,V(sx*.085,.75,-.24),V(sx*.085,.72,-.98),.014);                       // seat rail
+    tube(body,M.dark,V(sx*.085,.75,-.27),V(sx*.1,piv.y,piv.z),.014);                      // down to the swingarm pivot
+    tube(body,M.dark,v(A.shock[sx>0?0:1][1]).add(V(0,.01,0)),V(sx*.085,.73,-.5),.012);   // shock top mount
+    disc(body,M.metal,.03,.05,sg(10,6),[sx*.1,piv.y,piv.z]);}
+  tube(body,M.dark,V(-.1,piv.y,piv.z-.08),V(.1,piv.y,piv.z-.08),.014);
+  tube(body,M.dark,v(A.pivot).add(V(0,-.06,-.04)),V(0,.79,-.26),.02);                     // backbone under the tank
+  // rear shock springs (scheme trim colour)
+  for(const s of A.shock){const lo=v(s[0]),hi=v(s[1]),ax=hi.clone().sub(lo),L=ax.length();ax.normalize();
+    const key='moto:spring'+sg(1,0),sp=_g[key]||(_g[key]=new THREE.TubeGeometry(new Helix(A.shockR+.012,L*.64,7),sg(44,28),.0065,sg(4,3),false));
+    const o=mesh(sp,M.trim);o.position.copy(lo).addScaledVector(ax,L*.2);o.quaternion.setFromUnitVectors(V(0,1,0),ax);body.add(o);
+    disc(body,M.chrome,A.shockR+.022,.012,sg(8,6),o.position.toArray(),ax);disc(body,M.chrome,A.shockR+.022,.012,sg(8,6),lo.clone().addScaledVector(ax,L*.85).toArray(),ax);}
+  // footpegs with rubber, kick stand folded up on the left
+  for(const sx of[-1,1]){tube(body,M.dark,V(sx*.07,.3,-.24),V(sx*.2,.3,-.24),.012);tube(body,M.tire,V(sx*.11,.3,-.24),V(sx*.2,.3,-.24),.018,sg(8,6),true);}
+  tube(body,M.dark,V(.1,.31,-.31),V(.125,.21,-.6),.012);box(body,M.dark,.04,.012,.05,[.13,.205,-.62]);
+  // fuel cap and tank badges
+  const tc=v(A.tankTop);disc(body,M.chrome,.034,.016,sg(16,10),[tc.x,tc.y+.004,tc.z],V(0,1,0));disc(body,M.chrome,.012,.012,sg(8,6),[tc.x,tc.y+.016,tc.z],V(0,1,0));
+  const ts=v(A.tankSide);for(const sx of[-1,1])body.add(mesh(geo('SphereGeometry',1,sg(8,6),sg(5,4)),M.gold,[sx*(ts.x-.006),ts.y,ts.z],null,[.008,.028,.06]));
+  // rear indicators on stalks beside the tail light (+x = left, M.ind[2]; -x = right, M.ind[3])
+  const tl=v(A.tail);
+  for(const sx of[1,-1]){const a=V(sx*.05,tl.y-.02,tl.z+.06),c=V(sx*.15,tl.y-.02,tl.z+.06);tube(body,M.dark,a,c,.006,sg(6,4));
+    const ind=mesh(geo('SphereGeometry',1,sg(7,5),sg(4,3)),M.ind[sx>0?2:3],[c.x,c.y,c.z],null,[.024,.02,.03]);ind.castShadow=false;body.add(ind);}
+  // move the bike-space detail into the moving parts, then merge every part to one mesh per material
+  body.updateMatrixWorld(true);
+  for(const[src,dst]of[[sB,b.steer],[fB,b.fw],[rB,b.rw]]){for(const o of[...src.children])dst.attach(o);body.remove(src);}
+  for(const g of[body,b.steer,b.fw,b.rw])mergeByMaterial(g);
+  b.steer.traverse(o=>{if(o.isMesh&&o.material===M.head)b.heads.push(o);});
+  b.tailMesh=body.children.find(o=>o.material===M.tail)||null;
+  b.model=MotoKit.lod;
+}
 function buildBike(kind,o){
   o=o||{};const S=BIKES[kind],C=S.cfg,M=makeMats(S,o);
   const root=new THREE.Object3D();root.rotation.order='YXZ';
   const body=new THREE.Group();root.add(body);const steer=new THREE.Group();body.add(steer);
   const b={root,body,steer,spec:S,M,heads:[],rider:new THREE.Group(),kind};
+  if(kind==='cruiser'&&MotoKit.ok()){buildMoto(b,M);addRider(b,C);return b;}   // retro roadster model (falls back below if it did not load)
   const zr=-C.wb/2,zf=C.wb/2;
-  b.rw=wheel(C.Rr,C.tubeR,C.tread,M,false);b.rw.position.set(0,C.Rr,zr);body.add(b.rw);
+  b.rw=wheel(C.Rr,C.tubeR,C.tread,M,true);b.rw.position.set(0,C.Rr,zr);body.add(b.rw);
   steer.position.copy(C.N);
   b.fw=wheel(C.Rf,C.tubeF,C.tread,M,true);const ax=V(0,C.Rf,zf).sub(C.N);b.fw.position.copy(ax);steer.add(b.fw);
   for(const sx of[-1,1]){const top=V(sx*.1,.05,-.03),bot=V(sx*.095,ax.y,ax.z),mid=top.clone().lerp(bot,.55);rod(steer,M.gold,top,mid,.03);rod(steer,M.chrome,mid,bot,.021);}
   const B=C.bar;rod(steer,M.dark,V(-B.w,B.y,B.z),V(B.w,B.y,B.z),.014);
   for(const sx of[-1,1]){rod(steer,M.seat,V(sx*(B.w-.1),B.y,B.z),V(sx*B.w,B.y,B.z),.022);rod(steer,M.dark,V(sx*.1,.04,0),V(sx*(B.w*.6),B.y,B.z),.014);}
   box(steer,M.dark,.22,.04,.07,[0,.04,0]);
+  // mirrors (not on the motocross bike)
+  if(kind!=='off')for(const sx of[-1,1]){const base=V(sx*(B.w-.04),B.y+.02,B.z+.02),tip=V(sx*(B.w+.03),B.y+.2,B.z-.05);rod(steer,M.dark,base,tip,.01);ell(steer,M.chrome,.05,.032,.012,[tip.x,tip.y+.02,tip.z-.015],[-.3,0,sx*.2]);}
   for(const sx of[-1,1])rod(body,M.dark,V(sx*.1,.4,C.pivotZ),V(sx*.105,C.Rr,zr),.028);
   rod(body,M.dark,C.N.clone().add(V(0,-.04,0)),V(0,.55,C.pivotZ+.02),.035);rod(body,M.dark,V(0,.55,-.2),V(0,C.seat[4]+.04,-.75),.03);
   box(body,M.dark,C.engine[0],C.engine[1],C.engine[2],[C.engine[3],C.engine[4],C.engine[5]]);
@@ -883,6 +1037,72 @@ function inst(g,mat,items){
   items.forEach((it,i)=>{o.position.set(it.x,it.y,it.z);o.rotation.set(0,it.ry||0,0);const s=it.sx;o.scale.set(s,it.sy||s,it.sz||s);o.updateMatrix();m.setMatrixAt(i,o.matrix);if(it.c!==undefined){c.setHex(it.c);m.setColorAt(i,c);}});
   m.instanceMatrix.needsUpdate=true;if(m.instanceColor)m.instanceColor.needsUpdate=true;m.frustumCulled=false;return m;
 }
+/* ================= MODEL TREES ================= */
+// Tree models from the "22 trees" pack: assets/trees/trees.js (window.APEX_TREES) plus one texture atlas per tree, both made by
+// tools/convert_trees.py. A tree has a `hi` mesh (desktop) and a lighter `lo` mesh (touch). Per mesh the base64 blob holds, in this
+// order: positions (uint16 x3, scaled into min..max), uvs (uint16 x2), normals (int8 x3, padded to an even length), triangle
+// indices (uint16). Stages list the trees they want in their `models` config; placeModelTrees() scatters them.
+const TreeKit=(()=>{
+  const mats={},texs={};
+  const defs=()=>window.APEX_TREES||{};
+  // the atlas loads in the background; until it arrives the tree shows a plain foliage-green placeholder
+  function texture(file){
+    if(texs[file])return texs[file];
+    const c=document.createElement('canvas');c.width=c.height=2;const g=c.getContext('2d');g.fillStyle='#6a7a4a';g.fillRect(0,0,2,2);
+    const t=texs[file]=new THREE.CanvasTexture(c),img=new Image();t.anisotropy=TOUCH?1:4;
+    img.onload=()=>{t.image=img;t.needsUpdate=true;};img.src='assets/trees/'+file;
+    return t;
+  }
+  function decode(d){
+    const bin=atob(d.b),bytes=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);
+    const V=d.v,u16=(off,n)=>new Uint16Array(bytes.buffer,off,n);
+    const q=u16(0,V*3),uq=u16(V*6,V*2),nq=new Int8Array(bytes.buffer,V*10,V*3),iq=u16(V*10+((V*3+1)&~1),d.i);
+    const pos=new Float32Array(V*3),uv=new Float32Array(V*2),nor=new Float32Array(V*3);
+    for(let k=0;k<V*3;k++){const a=k%3;pos[k]=d.min[a]+q[k]*(d.max[a]-d.min[a])/65535;nor[k]=nq[k]/127;}
+    for(let k=0;k<V*2;k++)uv[k]=uq[k]/65535;
+    const g=new THREE.BufferGeometry();
+    g.setAttribute('position',new THREE.BufferAttribute(pos,3));g.setAttribute('uv',new THREE.BufferAttribute(uv,2));g.setAttribute('normal',new THREE.BufferAttribute(nor,3));
+    g.setIndex(new THREE.BufferAttribute(iq.slice(),1));g.computeBoundingSphere();
+    return g;
+  }
+  return{
+    has:name=>!!defs()[name],
+    // {h, r} = height and radius in metres of the unscaled model
+    size:name=>{const d=defs()[name];return d?{h:d.h,r:d.r}:null;},
+    // one InstancedMesh for all `items` ({x,y,z,sx,ry,c}) of a tree; the geometry is shared and cached with the other shared geometry.
+    // Every instance gets a tint (white by default): meshes that share a material must all have instance colours, or three r128
+    // reuses a shader built for them on a mesh without and throws on every frame.
+    mesh(name,items){
+      const d=defs()[name];if(!d)return null;
+      const lod=TOUCH&&d.lod.lo?'lo':'hi',key='tree:'+name+':'+lod;
+      const g=_g[key]||(_g[key]=decode(d.lod[lod]));
+      const m=inst(g,mats[name]||(mats[name]=new THREE.MeshLambertMaterial({map:texture(d.tex),side:THREE.DoubleSide})),items.map(it=>it.c===undefined?Object.assign({},it,{c:0xffffff}):it));
+      m.castShadow=m.receiveShadow=!TOUCH;
+      return m;
+    },
+    // start loading the atlases a stage uses (called when it is shown in the menu) so its first race does not show placeholders
+    preload(st){for(const d of st.models||[]){const t=defs()[d.t];if(t)texture(t.tex);}}
+  };
+})();
+// Scatters a stage's `models` ([{t:tree, n:count, a:min, b:max metres from the road edge, s:[min,max] scale, c:[tints]}]) beside the road.
+// It has its own random stream, so the rest of the world generates exactly as before and every player gets the same trees.
+function placeModelTrees(grp,st,waterY){
+  if(!st.models)return;
+  const rng=mulberry(st.seed*977+13);
+  for(const d of st.models){
+    if(!TreeKit.has(d.t))continue;
+    const want=Math.round(d.n*(TOUCH?.6:1)),items=[],tint=d.c||[0xffffff];
+    for(let tries=0;items.length<want&&tries<want*12;tries++){
+      const j=(rng()*M)|0,side=rng()<.5?-1:1,off=side*(st.half+d.a+rng()*(d.b-d.a)),s=d.s[0]+rng()*(d.s[1]-d.s[0]),ry=rng()*TAU,c=tint[(rng()*tint.length)|0];
+      const p=pose(j*DS,off),x=p.x,z=p.z;
+      if(nearest(x,z,-1).dist<st.half+d.a-1.2)continue;                       // another stretch of the road runs close by
+      const y=terrainH(x,z);
+      if(y<waterY+.5||Math.abs(terrainH(x+2,z)-y)+Math.abs(terrainH(x,z+2)-y)>2.6)continue;   // not in the lake, not on a cliff
+      items.push({x,y:y-.2,z,sx:s,ry,c});
+    }
+    if(items.length)grp.add(TreeKit.mesh(d.t,items));
+  }
+}
 function skyMesh(st,rad){
   const mat=new THREE.ShaderMaterial({side:THREE.BackSide,depthWrite:false,fog:false,
    uniforms:{top:{value:new THREE.Color(st.sky[0])},hor:{value:new THREE.Color(st.sky[1])},sunC:{value:new THREE.Color(st.sun[0])},sunD:{value:new THREE.Vector3(...st.sun[1]).normalize()}},
@@ -979,6 +1199,7 @@ function buildWorld(st){
     const fn=scatter(700,2.2,40);grp.add(inst(geo('ConeGeometry',1.2,1.1,6).clone().translate(0,.55,0),new THREE.MeshLambertMaterial({color:0x2c6a22}),fn.map(p=>({x:p.x,y:p.y,z:p.z,sx:.8+rng()*.9,sy:1}))));
   }
   {const fp=modFn(st.id,'props');if(fp){ctx.place=place;ctx.scatter=scatter;ctx.trees=trees;ctx.rocks=rocks;ctx.rail=rail;fp(ctx);}}
+  placeModelTrees(grp,st,T.waterY);
   // start gate
   {const p=pose(0,0);const g=new THREE.Group();const mt=new THREE.MeshLambertMaterial({color:0x222222});
    for(const sd of[-1,1])cyl(g,mt,.2,.2,6.5,[sd*(st.half+.8),3.2,0]);
@@ -1181,6 +1402,8 @@ function stepPlayer(dt){
   const mpHold=S.mpMenu===true;
   if(!crash&&!fin&&!mpHold){thrT=held('throttle')?1:0;fbT=held('brakeF')?1:0;rbT=held('brakeR')?1:0;steerIn=(held('left')?1:0)-(held('right')?1:0);clutchHeld=held('clutch');}
   if(fin){fbT=.45;}else if(mpHold){fbT=.8;rbT=.6;}
+  // touch / auto riders often rest a thumb across the throttle and brake buttons: braking wins, as on a bike with a brake-throttle override
+  if((TOUCH||Pl.auto)&&(fbT>0||rbT>0))thrT=0;
   Pl.thr+=(thrT-Pl.thr)*Math.min(1,dt*7);Pl.fb+=(fbT-Pl.fb)*Math.min(1,dt*(fbT>Pl.fb?22:16));Pl.rb+=(rbT-Pl.rb)*Math.min(1,dt*(rbT>Pl.rb?18:16));  // brake lever pressure builds progressively, releases quickly
   // ---- clutch / auto gearbox
   let ctarget=clutchHeld?0:1;
@@ -1190,8 +1413,15 @@ function stepPlayer(dt){
       if(Pl.gear===0&&Pl.thr>.05&&Pl.engineOn){Pl.gear=1;Pl.clutch=0;}
       if(Pl.gear>0){
         ctarget=Pl.v<4?(Pl.thr>.05?clamp((Pl.rpm-(idle+300))/(red*.2),0,1):0):1;
-        if(Pl.gear<spec.gears&&Pl.rpm>red*.86&&Pl.thr>.25){Pl.gear++;Pl.shiftT=.16;Snd.click();}
-        else if(Pl.gear>1&&Pl.rpm<red*.3&&Pl.v>2){Pl.gear--;Pl.shiftT=.16;}
+        // shift points follow the throttle and the brakes like a real auto box: early shifts when cruising, late when
+        // pushing, kick-down on full throttle, engine-braking downshifts under braking, never inside .35 s of the last shift
+        Pl.gearT=(Pl.gearT||0)+dt;
+        const rpmAt=g=>Pl.v/(TAU*spec.R)*60*(spec.ratios[g]||0),braking=Math.max(Pl.fb,Pl.rb);
+        const upAt=red*lerp(.52,.88,clamp(Pl.thr*1.25,0,1)),holdLow=red*lerp(.3,.44,Pl.thr);
+        if(Pl.gearT>.35&&Pl.v>2){
+          if(Pl.gear<spec.gears&&Pl.thr>.08&&braking<.2&&Pl.rpm>upAt&&rpmAt(Pl.gear+1)>red*.36){Pl.gear++;Pl.shiftT=.13;Pl.gearT=0;Snd.click();}
+          else if(Pl.gear>1&&rpmAt(Pl.gear-1)<red*.92&&(Pl.rpm<holdLow||(braking>.3&&Pl.rpm<red*.5)||(Pl.thr>.85&&Pl.rpm<red*.5))){Pl.gear--;Pl.shiftT=.1;Pl.gearT=0;}
+        }
       }
     }
     Pl.clutch+=(ctarget-Pl.clutch)*Math.min(1,dt*12);
@@ -1225,8 +1455,7 @@ function stepPlayer(dt){
   // riders on auto gearbox or touch controls get an ABS-like limit instead.
   const lean0=Math.abs(Pl.lean),usedLat=clamp(Math.tan(lean0)/Math.max(mu,.25),0,1);
   const gripLong=Math.sqrt(Math.max(0,1-usedLat*usedLat*.85));
-  const brakeCap=mu*m*GRAV*2.2*gripLong,brakeAsk=(Pl.fb*1.7*spec.brake+Pl.rb*1.1)*mu*m*GRAV;
-  const assisted=TOUCH||Pl.auto;
+  const brakeCap=mu*m*GRAV*2.2*gripLong,assisted=TOUCH||Pl.auto,brakeAsk=(Pl.fb*1.7*spec.brake+Pl.rb*(assisted?1.6:1.1))*mu*m*GRAV;  // assisted riders have ABS, so the rear button can brake harder
   let Fb=brakeAsk,locked2=false;
   if(brakeAsk>brakeCap){Fb=assisted?brakeCap:brakeCap*.82;locked2=!assisted;}
   Pl.skid=(Pl.v>9&&((locked2&&Pl.fb>.5)||Pl.rb>.9));
@@ -1513,7 +1742,7 @@ function refreshResult(){if(S.mode==='multi'&&$('result').classList.contains('on
 
 /* ================= KEYS ================= */
 function onceAction(code){
-  if(code===KEYS.mute){Snd.mute(!Snd.muted);toast(Snd.muted?'Sound off':'Sound on');return;}
+  if(code===KEYS.mute){Snd.mute(!Snd.muted);$('tMute').classList.toggle('off',Snd.muted);toast(Snd.muted?'Sound off':'Sound on');return;}
   if(code===KEYS.units){S.units=S.units==='kmh'?'mph':'kmh';return;}
   if(code===KEYS.pause){pauseGame();return;}
   if(!['countdown','race','roam','finished'].includes(S.state))return;
@@ -1769,6 +1998,7 @@ function stepper(el,val,onSet,enabled){el.innerHTML='';const btn=(t,dis,f)=>{con
   el.append(btn('\u2212',val<=LAP_RANGE[0],()=>onSet(val-1)),o,btn('+',val>=LAP_RANGE[1],()=>onSet(val+1)));}
 function refreshMenu(){
   const sl=$('stageList');
+  TreeKit.preload(STAGES[S.stage]);
   if(sl.children.length!==STAGES.length){
     sl.innerHTML='';
     STAGES.forEach((st,i)=>{const u=MAPUI[st.id];const b=document.createElement('button');b.type='button';b.className='mapc';b.style.setProperty('--c',u.c);b.style.setProperty('--i',i);b.setAttribute('role','radio');

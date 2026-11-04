@@ -45,6 +45,13 @@ built-in look is used instead. Do not rely on that; write defensive code and tes
 | `obstacle(kind, rng, kit)` | once per obstacle | `{obj, hw, hl}` or `null`. Same conventions as vehicles. Kind `'log'` is special: the game places it near the road centre line with a small yaw; its long axis must lie along local x and `hw` is its half length. |
 | `kit.addUpdater(fn)` | any time | `fn(dt, nowMs)` runs every frame (animation only). It is removed automatically if it throws. |
 
+## Model trees
+
+Textured tree models (`assets/trees`, see the README there) are added by the game itself from each stage's `models`
+list in `index.html`, after your `props` hook has run. A map module does not call them; use `propScale` to thin the
+built-in trees and keep your own trees clear of the road as before. They count towards the budget below (about
++110k triangles on desktop and +35k on touch for the busiest map).
+
 ## Track shape (trackShape)
 
 This hook is the one allowed change to the road centre line, and it is the only exception to hard rule 2 for road

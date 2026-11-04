@@ -506,8 +506,14 @@ const held=a=>down.has(KEYS[a]);
 
 /* ================= RENDERER ================= */
 const canvas=$('c');
-const renderer=new THREE.WebGLRenderer({canvas,antialias:!TOUCH,powerPreference:'high-performance'});
-renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,TOUCH?1.25:1.75));
+/* Quality on phones adapts to the device instead of being fixed low: a capable phone (6+ cores, 4+ GB when reported) gets
+   antialiasing, a higher resolution ceiling and fuller tree coverage; every phone starts at 1.25x and the governor in frame()
+   raises or lowers the render resolution to hold ~60 fps. Desktop is unchanged. */
+const DPR=window.devicePixelRatio||1,CAPABLE=TOUCH&&(navigator.hardwareConcurrency||4)>=6&&(navigator.deviceMemory===undefined||navigator.deviceMemory>=4);
+const PR_MAX=TOUCH?Math.min(DPR,CAPABLE?2:1.5):Math.min(DPR,1.75),PR_MIN=TOUCH?Math.min(DPR,.9):1;
+let pixelRatio=TOUCH?Math.min(PR_MAX,1.25):PR_MAX;
+const renderer=new THREE.WebGLRenderer({canvas,antialias:!TOUCH||CAPABLE,powerPreference:'high-performance'});
+renderer.setPixelRatio(pixelRatio);
 renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 const camera=new THREE.PerspectiveCamera(65,1,.15,5000);
 let scene=new THREE.Scene();
@@ -1049,7 +1055,7 @@ const TreeKit=(()=>{
   function texture(file){
     if(texs[file])return texs[file];
     const c=document.createElement('canvas');c.width=c.height=2;const g=c.getContext('2d');g.fillStyle='#6a7a4a';g.fillRect(0,0,2,2);
-    const t=texs[file]=new THREE.CanvasTexture(c),img=new Image();t.anisotropy=TOUCH?1:4;
+    const t=texs[file]=new THREE.CanvasTexture(c),img=new Image();t.anisotropy=TOUCH?(CAPABLE?2:1):4;
     img.onload=()=>{t.image=img;t.needsUpdate=true;};img.src='assets/trees/'+file;
     return t;
   }
@@ -1091,7 +1097,7 @@ function placeModelTrees(grp,st,waterY){
   const rng=mulberry(st.seed*977+13);
   for(const d of st.models){
     if(!TreeKit.has(d.t))continue;
-    const want=Math.round(d.n*(TOUCH?.6:1)),items=[],tint=d.c||[0xffffff];
+    const want=Math.round(d.n*(TOUCH?(CAPABLE?.85:.6):1)),items=[],tint=d.c||[0xffffff];
     for(let tries=0;items.length<want&&tries<want*12;tries++){
       const j=(rng()*M)|0,side=rng()<.5?-1:1,off=side*(st.half+d.a+rng()*(d.b-d.a)),s=d.s[0]+rng()*(d.s[1]-d.s[0]),ry=rng()*TAU,c=tint[(rng()*tint.length)|0];
       const p=pose(j*DS,off),x=p.x,z=p.z;
@@ -2189,10 +2195,24 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden||!mpInRoom(
 {const m=/[?&]room=([A-Za-z0-9]{3,6})/.exec(location.search);if(m){setTimeout(()=>{mpOpen();$('mpCode').value=m[1].toUpperCase();if(MP.name&&RELAY_URL)$('mpJoin').click();},50);}}
 
 /* ================= MAIN LOOP ================= */
+/* Resolution governor (touch only): average the frame time over 1.5 s; below ~44 fps step the render resolution down
+   (and stay down for 8 s), above ~57 fps step it up, at most two drops before it settles. Spikes and the first 3 s are ignored. */
+const GOV={t:0,n:0,lock:0,downs:0,start:0};
+function adaptResolution(ms,now){
+  if(!GOV.start)GOV.start=now;
+  if(ms>250||now-GOV.start<3000||document.hidden){GOV.t=GOV.n=0;return;}
+  GOV.t+=ms;GOV.n++;
+  if(GOV.t<1500)return;
+  const avg=GOV.t/GOV.n;GOV.t=GOV.n=0;let pr=pixelRatio;
+  if(avg>22.5&&pr>PR_MIN){pr=Math.max(PR_MIN,pr*.88);GOV.lock=now+8000;GOV.downs++;}
+  else if(avg<17.5&&pr<PR_MAX&&now>GOV.lock&&GOV.downs<2)pr=Math.min(PR_MAX,pr+.125);
+  if(pr!==pixelRatio){pixelRatio=pr;renderer.setPixelRatio(pr);resize();}
+}
 let last=performance.now(),acc=0;const STEP=1/120;
 function frame(now){
   requestAnimationFrame(frame);
-  let dt=Math.min(.05,(now-last)/1000);last=now;
+  const frameMs=now-last;let dt=Math.min(.05,frameMs/1000);last=now;
+  if(TOUCH&&S.state!=='menu')adaptResolution(frameMs,now);
   if(S.state==='menu'){
     menuT+=dt;menuBike.root.rotation.y=menuT*.5+.6;menuHolder.position.set(0,0,0);
     camera.fov=40;camera.updateProjectionMatrix();camera.position.set(0,1.5,5.2);camera.lookAt(-.9,.25,0);

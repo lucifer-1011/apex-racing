@@ -413,6 +413,9 @@ body.touch #board div{font-size:12px;padding:1px 6px}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" integrity="sha384-CI3ELBVUz9XQO+97x6nwMDPosPR5XvsxW2ua7N1Xeygeh1IxtgqtCkGfQY9WWdHu" crossorigin="anonymous"></script>
 <script src="assets/trees/trees.js"></script>
 <script src="assets/bikes/moto.js"></script>
+<script src="assets/bikes/superbike.js"></script>
+<script src="assets/bikes/motocross.js"></script>
+<script src="assets/bikes/adventure.js"></script>
 <script>
 (function(){
 'use strict';
@@ -440,7 +443,9 @@ const BIKES={
  sport:{name:'Veloce RR 1000',cls:'Superbike · BMW / Aprilia inspired',desc:'Razor-sharp superbike. 6 gears, huge top speed, wheelies in first. Made for the highway.',
   gears:6,idle:1300,red:13500,peakT:120,curve:[[0,.35],[.25,.55],[.5,.78],[.7,1],[.85,.97],[1,.82]],mass:285,R:.31,v1:20.8,vTop:82,cdA:.36,lean:.95,tyre:1.3,dirt:.7,brake:1.0,landLimit:9,aiAcc:9,cf:2,
   col1:0xf4f6fa,col2:0x1c69d4,col3:0xd8222a,alt:[0x16181d,0x00d1ff,0xffffff],suit:0x1c69d4,helmet:0xf4f6fa,stats:[95,90,40,100],
-  cfg:{wb:1.42,Rf:.30,Rr:.31,tubeF:.062,tubeR:.075,tread:null,N:V(0,.86,.52),bar:{w:.3,y:.06,z:-.12},pivotZ:-.2,hip:V(0,.9,-.3),shoulder:V(0,1.2,.05),peg:[.23,.4,-.17],kneeUp:.14,kneeFwd:.16,headFwd:.08,seat:[.22,.05,.45,0,.82,-.2],engine:[.26,.34,.42,0,.48,0],tail:[0,.9,-.93],indF:[.2,.8,.78],indR:[.12,.9,-.9],eye:V(0,1.3,.25)}},
+  cfg:{wb:1.42,Rf:.30,Rr:.31,tubeF:.062,tubeR:.075,tread:null,N:V(0,.86,.52),bar:{w:.3,y:.06,z:-.12},pivotZ:-.2,hip:V(0,.9,-.3),shoulder:V(0,1.2,.05),peg:[.23,.4,-.17],kneeUp:.14,kneeFwd:.16,headFwd:.08,seat:[.22,.05,.45,0,.82,-.2],engine:[.26,.34,.42,0,.48,0],tail:[0,.9,-.93],indF:[.2,.8,.78],indR:[.12,.9,-.9],eye:V(0,1.3,.25)},
+  // rider pose on the superbike model (assets/bikes/superbike.js); SuperKit merges it into cfg when the model loads
+  fit:{hip:V(0,.92,-.3),shoulder:V(0,1.1,.12),peg:[.22,.38,-.12],kneeUp:.12,kneeFwd:.14,headFwd:.06,eye:V(0,1.25,.24)}},
  cruiser:{name:'Iron Stallion 1200',cls:'Retro roadster · Bonneville / Royal Enfield inspired',desc:'Heavy twin with torque everywhere. Leans until the footpegs scrape. Built for mountain sweepers.',
   gears:5,idle:900,red:6200,peakT:125,curve:[[0,.6],[.2,.85],[.5,1],[.75,.9],[1,.7]],mass:410,R:.34,v1:14.5,vTop:49,cdA:.65,lean:.58,tyre:1.0,dirt:.75,brake:.75,landLimit:8,aiAcc:5.5,cf:1,
   col1:0x6e1722,col2:0x111111,col3:0xc9a24a,alt:[0x1d3a2a,0xe8d9a8,0x111111],suit:0x3a2b20,helmet:0x151515,stats:[60,45,85,55],
@@ -449,12 +454,16 @@ const BIKES={
   fit:{hip:V(0,.92,-.46),shoulder:V(0,1.42,-.28),peg:[.2,.3,-.24],kneeUp:.12,kneeFwd:.2,headFwd:.02,eye:V(0,1.55,-.15)}},
  off:{name:'Dune Raider 450',cls:'Off-road · motocross',desc:'Featherweight with long-travel suspension. Soaks up jumps and whoops, grips loose dirt.',
   gears:6,idle:1700,red:11500,peakT:52,curve:[[0,.4],[.3,.65],[.55,.95],[.7,1],[.9,.9],[1,.7]],mass:190,R:.37,v1:11.5,vTop:41,cdA:.5,lean:.85,tyre:.9,dirt:1.25,brake:.85,landLimit:15,aiAcc:9,cf:.5,
-  col1:0xff6a13,col2:0xffffff,col3:0x111111,alt:[0x1a73e8,0xffffff,0x111111],suit:0xff6a13,helmet:0xffffff,stats:[55,95,15,45],
-  cfg:{wb:1.48,Rf:.40,Rr:.36,tubeF:.07,tubeR:.08,tread:'knob',N:V(0,1.2,.55),bar:{w:.42,y:.2,z:-.1},pivotZ:-.2,hip:V(0,1.02,-.32),shoulder:V(0,1.52,-.12),peg:[.22,.4,-.1],kneeUp:.12,kneeFwd:.16,headFwd:.05,seat:[.13,.06,.7,0,.99,-.35],engine:[.24,.3,.36,0,.56,0],tail:[0,1.04,-1.02],indF:[.18,1.0,.62],indR:[.1,1.0,-1.0],eye:V(0,1.75,0)}},
- adv:{name:'Trail Master 1250',cls:'Adventure · GS inspired',desc:'Tall, comfortable all-rounder with panniers and a big boxer twin. Handles mud, gravel and tarmac.',
+  col1:0xf4f4f4,col2:0xd8352a,col3:0x16171a,alt:[0xff6a13,0xffffff,0x111111],suit:0x1e2026,helmet:0xffffff,stats:[55,95,15,45],
+  cfg:{wb:1.48,Rf:.40,Rr:.36,tubeF:.07,tubeR:.08,tread:'knob',N:V(0,1.2,.55),bar:{w:.42,y:.2,z:-.1},pivotZ:-.2,hip:V(0,1.02,-.32),shoulder:V(0,1.52,-.12),peg:[.22,.4,-.1],kneeUp:.12,kneeFwd:.16,headFwd:.05,seat:[.13,.06,.7,0,.99,-.35],engine:[.24,.3,.36,0,.56,0],tail:[0,1.04,-1.02],indF:[.18,1.0,.62],indR:[.1,1.0,-1.0],eye:V(0,1.75,0)},
+  // rider pose on the motocross model (assets/bikes/motocross.js); MxKit merges it into cfg when the model loads
+  fit:{hip:V(0,1.1,-.22),shoulder:V(0,1.56,-.02),peg:[.205,.385,-.13],kneeUp:.12,kneeFwd:.16,headFwd:.05,eye:V(0,1.78,.14)}},
+ adv:{name:'Trail Master 1250',cls:'Adventure · Tiger inspired',desc:'Tall, comfortable all-rounder with luggage and a big triple. Handles mud, gravel and tarmac.',
   gears:6,idle:1100,red:8800,peakT:143,curve:[[0,.5],[.2,.78],[.45,1],[.7,.95],[1,.75]],mass:335,R:.36,v1:17.5,vTop:58,cdA:.62,lean:.78,tyre:1.1,dirt:1.0,brake:.9,landLimit:11,aiAcc:7,cf:1,
-  col1:0xf2c200,col2:0xf2f2f2,col3:0x2a2d33,alt:[0x2a2d33,0xff5a1f,0xf2f2f2],suit:0x2a2d33,helmet:0xf2c200,stats:[75,70,65,75],
-  cfg:{wb:1.6,Rf:.36,Rr:.36,tubeF:.075,tubeR:.09,tread:'knob',N:V(0,1.1,.6),bar:{w:.42,y:.2,z:-.1},pivotZ:-.22,hip:V(0,.96,-.3),shoulder:V(0,1.48,-.12),peg:[.25,.36,-.05],kneeUp:.1,kneeFwd:.2,headFwd:.03,seat:[.18,.07,.55,0,.93,-.25],engine:[.3,.3,.4,0,.5,.05],tail:[0,1.14,-1.03],indF:[.22,.9,.82],indR:[.3,.95,-.86],eye:V(0,1.7,.1)}}
+  col1:0x3f5a2e,col2:0xe8d9a8,col3:0xe8681f,alt:[0xe8d9a8,0x16171a,0xe8681f],suit:0x2a2d33,helmet:0xe8681f,stats:[75,70,65,75],
+  cfg:{wb:1.6,Rf:.36,Rr:.36,tubeF:.075,tubeR:.09,tread:'knob',N:V(0,1.1,.6),bar:{w:.42,y:.2,z:-.1},pivotZ:-.22,hip:V(0,.96,-.3),shoulder:V(0,1.48,-.12),peg:[.25,.36,-.05],kneeUp:.1,kneeFwd:.2,headFwd:.03,seat:[.18,.07,.55,0,.93,-.25],engine:[.3,.3,.4,0,.5,.05],tail:[0,1.14,-1.03],indF:[.22,.9,.82],indR:[.3,.95,-.86],eye:V(0,1.7,.1)},
+  // rider pose on the adventure model (assets/bikes/adventure.js); AdvKit merges it into cfg when the model loads
+  fit:{hip:V(0,1.05,-.22),shoulder:V(0,1.58,-.1),peg:[.215,.38,-.02],kneeUp:.1,kneeFwd:.2,headFwd:.03,eye:V(0,1.8,.04)}}
 };
 for(const k in BIKES){const b=BIKES[k];b.ratios=[0];for(let i=1;i<=b.gears;i++){const vt=b.v1*Math.pow(b.vTop/b.v1,(i-1)/(b.gears-1));b.ratios.push(b.red*TAU*b.R/(60*vt));}}
 function curveAt(c,x){if(x<=c[0][0])return c[0][1];for(let i=1;i<c.length;i++)if(x<=c[i][0]){const t=(x-c[i-1][0])/(c[i][0]-c[i-1][0]);return lerp(c[i-1][1],c[i][1],t);}return c[c.length-1][1];}
@@ -532,13 +541,14 @@ function rod(par,m,a,b,r){const d=b.clone().sub(a),len=d.length();const o=mesh(g
 function fender(par,m,R,arc,pos,tube,wide){const g=new THREE.Group();g.add(mesh(geo('TorusGeometry',R,tube,5,20,arc),m,null,[0,0,PI/2-arc/2],[1,1,wide]));g.rotation.y=PI/2;g.position.set(pos[0],pos[1],pos[2]);par.add(g);return g;}
 
 function makeMats(S,o){
-  if(o.ghost){const g=new THREE.MeshBasicMaterial({color:0x8fe6ff,transparent:true,opacity:.38,depthWrite:false});return{paint:g,accent:g,trim:g,dark:g,chrome:g,tire:g,glass:g,seat:g,suit:g,helmet:g,visor:g,glove:g,boot:g,tail:g,head:g,gold:g,metal:g,plate:g,ind:[g,g,g,g]};}
+  if(o.ghost){const g=new THREE.MeshBasicMaterial({color:0x8fe6ff,transparent:true,opacity:.38,depthWrite:false});return{carbon:g,paint:g,accent:g,trim:g,dark:g,chrome:g,tire:g,glass:g,seat:g,suit:g,helmet:g,visor:g,glove:g,boot:g,tail:g,head:g,gold:g,hivis:g,luggage:g,metal:g,plate:g,ind:[g,g,g,g]};}
   const c=o.color!==undefined?[o.color,S.col2,S.col3]:(o.alt?S.alt:[S.col1,S.col2,S.col3]);
   const st=(col,r,m)=>new THREE.MeshStandardMaterial({color:col,roughness:r,metalness:m});
-  return{paint:st(c[0],.28,.35),accent:st(c[1],.35,.25),trim:st(c[2],.35,.25),dark:st(0x15171b,.6,.3),
+  return{carbon:st(0x0e1014,.34,.5),paint:st(c[0],.28,.35),accent:st(c[1],.35,.25),trim:st(c[2],.35,.25),dark:st(0x15171b,.6,.3),
    chrome:new THREE.MeshStandardMaterial({color:0xdfe3ea,roughness:.2,metalness:.95,envMapIntensity:1.3}),tire:st(0x101010,.95,0),
    glass:new THREE.MeshStandardMaterial({color:0x223344,transparent:true,opacity:.45,roughness:.1}),seat:st(0x1a1a1a,.85,0),
-   suit:st(o.alt?0x222222:S.suit,.6,.05),helmet:st(o.color!==undefined?o.color:(o.alt?0x00d1ff:S.helmet),.25,.2),gold:st(0xd7a83a,.35,.6),
+   suit:st(o.alt?0x222222:S.suit,.6,.05),helmet:st(o.color!==undefined?o.color:(o.alt?0x00d1ff:S.helmet),.25,.2),gold:st(0xd7a83a,.35,.6),hivis:st(0xf2d21a,.45,.1),   // hivis: yellow fork-guard stripes (motocross model)
+   luggage:st(0x4b5057,.7,.2),   // luggage: dark grey cases (adventure model)
    visor:new THREE.MeshStandardMaterial({color:0x0b0e14,roughness:.1,metalness:.7,envMapIntensity:1.4}),glove:st(0x17191e,.55,.1),boot:st(0x1b1d22,.6,.12),
    metal:st(0xa7acb3,.34,.85),plate:st(0xa39c88,.7,0),           // brushed alloy and number plate (Iron Stallion model)
    tail:new THREE.MeshBasicMaterial({color:0x5a1010}),head:new THREE.MeshBasicMaterial({color:0xcfc7a0}),
@@ -669,7 +679,7 @@ const MotoKit=(()=>{
       ok=true;
     }
   }catch(e){console.warn('Iron Stallion model not usable, using the procedural cruiser',e);}
-  return{ok:()=>ok,parts:()=>parts,A:()=>D.anchors,lod};
+  return{ok:()=>ok,parts:()=>parts,A:()=>D.anchors,lod,decode};
 })();
 // A coil spring along +y (radius r, height h, n turns) for the rear shocks
 class Helix extends THREE.Curve{
@@ -750,12 +760,85 @@ function buildMoto(b,M){
   b.tailMesh=body.children.find(o=>o.material===M.tail)||null;
   b.model=MotoKit.lod;
 }
+/* ================= MODEL BIKE (Veloce RR 1000) ================= */
+// The Skyline Highway superbike is an original procedural model: assets/bikes/superbike.js (window.APEX_SUPER, made by
+// tools/build_superbike.py), same packing as the roadster in moto.js (decoded by MotoKit.decode), one mesh per part (body, steer,
+// fw, rw) and material slot. Everything (fairing, tank, tail, forks, brakes, wheels, mirrors, lights) is in the file, so there is
+// no runtime detail pass. If the file is missing or broken, ok stays false and buildBike() keeps drawing the old procedural sport bike.
+const SuperKit=(()=>{
+  const D=window.APEX_SUPER,lod=TOUCH?'lo':'hi';let ok=false,parts=null;
+  try{
+    if(D&&D.anchors&&D.lod&&D.lod[lod]){
+      parts=D.lod[lod].map(m=>({p:m.p,s:m.s,g:MotoKit.decode(m)}));
+      const A=D.anchors,C=BIKES.sport.cfg,G=A.grip[0];
+      // the visual config follows the model: wheelbase, wheel sizes, steering pivot and grips; the rider pose comes from BIKES.sport.fit
+      Object.assign(C,{wb:A.wb,Rf:A.Rf,Rr:A.Rr,N:V(...A.pivot),bar:{w:G[0],y:G[1]-A.pivot[1],z:G[2]-A.pivot[2]}},BIKES.sport.fit);
+      ok=true;
+    }
+  }catch(e){console.warn('Veloce RR model not usable, using the procedural sport bike',e);}
+  return{ok:()=>ok,parts:()=>parts,A:()=>D.anchors,lod};
+})();
+// Builds the superbike into b (from buildBike): the steer group hangs in a `head` group tilted to the rake, so the bars and forks
+// turn about the real steering axis; the front wheel is inside it, the rear wheel hangs on the body.
+function buildSuper(b,M){
+  const A=SuperKit.A(),body=b.body,v=a=>V(a[0],a[1],a[2]);
+  const head=new THREE.Group();head.position.copy(v(A.pivot));head.rotation.x=A.rake;body.add(head);head.add(b.steer);
+  b.fw=new THREE.Group();b.fw.position.copy(v(A.fwPos));b.steer.add(b.fw);
+  b.rw=new THREE.Group();b.rw.position.copy(v(A.axleR));body.add(b.rw);
+  const SLOT={paint:M.paint,accent:M.accent,trim:M.trim,carbon:M.carbon,dark:M.dark,metal:M.metal,chrome:M.chrome,gold:M.gold,tire:M.tire,seat:M.seat,
+   plate:M.plate,glass:M.glass,gauge:M.visor,head:M.head,tail:M.tail,indFL:M.ind[0],indFR:M.ind[1],indRL:M.ind[2],indRR:M.ind[3]};
+  const part={body,steer:b.steer,fw:b.fw,rw:b.rw};
+  for(const m of SuperKit.parts())part[m.p].add(mesh(m.g,SLOT[m.s]));
+  body.traverse(o=>{if(o.isMesh&&o.material===M.head)b.heads.push(o);});
+  b.tailMesh=body.children.find(o=>o.material===M.tail)||null;
+  b.model=SuperKit.lod;
+}
+/* ================= MODEL BIKES (Dune Raider 450, Trail Master 1250) ================= */
+// The Canyon Motocross bike and the Amazon Trail adventure tourer are original procedural models: assets/bikes/motocross.js
+// (window.APEX_MX, made by tools/build_motocross.py) and assets/bikes/adventure.js (window.APEX_ADV, tools/build_adventure.py),
+// same packing as moto.js (decoded by MotoKit.decode), one mesh per part (body, steer, fw, rw) and material slot. Everything
+// (bodywork and graphics, lights, forks, spoked wheels, exhaust, shock, chain, luggage) is in the file. packedKit() decodes a
+// model once (shared by every bike of that kind); if it is missing or broken, ok stays false and buildBike() keeps drawing the
+// old procedural bike.
+function packedKit(D,kind,label){
+  const lod=TOUCH?'lo':'hi';let ok=false,parts=null;
+  try{
+    if(D&&D.anchors&&D.lod&&D.lod[lod]){
+      parts=D.lod[lod].map(m=>({p:m.p,s:m.s,g:MotoKit.decode(m)}));
+      const A=D.anchors,C=BIKES[kind].cfg,G=A.grip[0];
+      // the visual config follows the model: wheelbase, wheel sizes, steering pivot and grips; the rider pose comes from BIKES[kind].fit
+      Object.assign(C,{wb:A.wb,Rf:A.Rf,Rr:A.Rr,N:V(...A.pivot),bar:{w:G[0],y:G[1]-A.pivot[1],z:G[2]-A.pivot[2]}},BIKES[kind].fit);
+      ok=true;
+    }
+  }catch(e){console.warn(label+' model not usable, using the procedural bike',e);}
+  return{ok:()=>ok,parts:()=>parts,A:()=>D.anchors,lod};
+}
+const MxKit=packedKit(window.APEX_MX,'off','Dune Raider'),AdvKit=packedKit(window.APEX_ADV,'adv','Trail Master');
+// Builds a packed model bike K into b (from buildBike), like buildSuper: the steer group hangs in a `head` group tilted to the
+// rake, so bars, forks, fender, lights and screen turn about the real steering axis; the front wheel is inside it, the rear on the body.
+function buildPacked(b,M,K){
+  const A=K.A(),body=b.body,v=a=>V(a[0],a[1],a[2]);
+  const head=new THREE.Group();head.position.copy(v(A.pivot));head.rotation.x=A.rake;body.add(head);head.add(b.steer);
+  b.fw=new THREE.Group();b.fw.position.copy(v(A.fwPos));b.steer.add(b.fw);
+  b.rw=new THREE.Group();b.rw.position.copy(v(A.axleR));body.add(b.rw);
+  const SLOT={paint:M.paint,accent:M.accent,trim:M.trim,carbon:M.carbon,dark:M.dark,metal:M.metal,chrome:M.chrome,gold:M.gold,hivis:M.hivis,
+   luggage:M.luggage,tire:M.tire,seat:M.seat,plate:M.plate,glass:M.glass,gauge:M.visor,head:M.head,tail:M.tail,
+   indFL:M.ind[0],indFR:M.ind[1],indRL:M.ind[2],indRR:M.ind[3]};
+  const part={body,steer:b.steer,fw:b.fw,rw:b.rw};
+  for(const m of K.parts())part[m.p].add(mesh(m.g,SLOT[m.s]));
+  b.steer.traverse(o=>{if(o.isMesh&&o.material===M.head)b.heads.push(o);});
+  b.tailMesh=body.children.find(o=>o.material===M.tail)||null;
+  b.model=K.lod;
+}
 function buildBike(kind,o){
   o=o||{};const S=BIKES[kind],C=S.cfg,M=makeMats(S,o);
   const root=new THREE.Object3D();root.rotation.order='YXZ';
   const body=new THREE.Group();root.add(body);const steer=new THREE.Group();body.add(steer);
   const b={root,body,steer,spec:S,M,heads:[],rider:new THREE.Group(),kind};
   if(kind==='cruiser'&&MotoKit.ok()){buildMoto(b,M);addRider(b,C);return b;}   // retro roadster model (falls back below if it did not load)
+  if(kind==='sport'&&SuperKit.ok()){buildSuper(b,M);addRider(b,C);return b;}   // superbike model (falls back below if it did not load)
+  if(kind==='off'&&MxKit.ok()){buildPacked(b,M,MxKit);addRider(b,C);return b;}  // motocross model (falls back below if it did not load)
+  if(kind==='adv'&&AdvKit.ok()){buildPacked(b,M,AdvKit);addRider(b,C);return b;} // adventure model (falls back below if it did not load)
   const zr=-C.wb/2,zf=C.wb/2;
   b.rw=wheel(C.Rr,C.tubeR,C.tread,M,true);b.rw.position.set(0,C.Rr,zr);body.add(b.rw);
   steer.position.copy(C.N);

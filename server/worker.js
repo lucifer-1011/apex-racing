@@ -1,4 +1,4 @@
-// Apex Rider multiplayer relay: one Durable Object per room code.
+// Jasola Rider multiplayer relay: one Durable Object per room code.
 // Clients connect to wss://<worker>/ws/<CODE>?mode=create|join&name=..[&tok=..]
 //
 // Trust model: physics runs on each client, so results are casual. The relay does

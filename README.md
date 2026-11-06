@@ -1,4 +1,4 @@
-# Apex Rider
+# Jasola Rider
 
 3D browser motorcycle game (Three.js). Four stages, four bikes, manual gears + clutch,
 Challenge / Ghost / Free Roam modes, touch + keyboard controls.

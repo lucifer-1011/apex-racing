@@ -1,7 +1,7 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no"><meta name="theme-color" content="#0a0c11">
 <link rel="manifest" href="manifest.webmanifest"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' wss://apex-rider-relay.racinggame.workers.dev; object-src 'none'; base-uri 'none'">
-<title>Apex Rider</title>
+<title>Jasola Rider</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -178,6 +178,7 @@ body.touch #board div{font-size:12px;padding:1px 6px}
 /* ===== landing page ===== */
 #menu.on{display:flex;flex-direction:column;padding:0;gap:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;background:linear-gradient(180deg,rgba(5,7,11,.62) 0%,rgba(5,7,11,.12) 24%,rgba(5,7,11,0) 46%,rgba(5,7,11,.9) 100%)}
 #menu button:focus-visible{outline:2px solid #fff;outline-offset:3px}
+.lp-legal{margin-left:auto;display:flex;gap:14px;font-size:13px}.lp-legal a{color:var(--muted);text-decoration:none}.lp-legal a:hover{color:var(--text)}
 .lp-top{display:flex;align-items:center;gap:18px;padding:max(14px,env(safe-area-inset-top,0px)) max(24px,env(safe-area-inset-right,0px)) 6px max(24px,env(safe-area-inset-left,0px))}
 .lp-top .brand{font-size:30px;white-space:nowrap}
 .lp-tag{flex:1;color:var(--muted);font-size:14px;letter-spacing:.08em;margin:0;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -285,8 +286,9 @@ body.touch #board div{font-size:12px;padding:1px 6px}
 
 <div id="menu" class="screen on">
   <header class="lp-top">
-    <div class="brand">APEX<b>RIDER</b></div>
+    <div class="brand">JASOLA<b>RIDER</b></div>
     <div class="lp-tag" id="subLine">3D motorcycle riding</div>
+    <nav class="lp-legal" aria-label="Legal"><a href="privacy.html" target="_blank" rel="noopener">Privacy</a><a href="terms.html" target="_blank" rel="noopener">Terms</a></nav>
   </header>
   <main class="lp-main">
     <section class="lp-left">
@@ -2138,7 +2140,24 @@ window.addEventListener('pointerup',e=>{if(e.pointerType==='touch'&&e.isTrusted)
 window.addEventListener('pointerdown',e=>{if(e.pointerType==='touch'&&!TOUCH){setTouch(true);if(S.state==='menu')refreshMenu();}},true);
 $('startBtn').onclick=startGame;
 $('bResume').onclick=pauseGame;$('bRestart').onclick=()=>{S.state='paused';resetRun();};$('bQuit').onclick=()=>quitToMenu();
-$('rAgain').onclick=()=>{if(S.mode==='multi')mpBackToLobby();else resetRun();};$('rMenu').onclick=()=>quitToMenu();
+/* ===== Ads: inert until ApexAds.pub holds the AdSense publisher id ("ca-pub-..."). Also add Google's ad domains to the security policy in <head> then. ===== */
+const ApexAds={pub:'',ready:false,
+  enabled(){return /^ca-pub-\d+$/.test(this.pub);},
+  init(){
+    if(!this.enabled()||this.ready)return;this.ready=true;
+    window.adsbygoogle=window.adsbygoogle||[];window.adBreak=window.adConfig=o=>window.adsbygoogle.push(o);
+    const s=document.createElement('script');s.async=true;s.crossOrigin='anonymous';
+    s.src='https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client='+this.pub;s.setAttribute('data-ad-client',this.pub);
+    document.head.appendChild(s);window.adConfig({preloadAdBreaks:'on',sound:'on'});
+  },
+  // full-screen break between races; never during a race. Always calls done(), also when no ad is shown or ads are off
+  breakThen(done){
+    if(!this.enabled()){done();return;}
+    this.init();let fired=false;const go=()=>{if(!fired){fired=true;if(Snd.master)Snd.master.gain.value=.7;done();}};
+    setTimeout(go,10000);
+    window.adBreak({type:'next',name:'ride-again',beforeAd:()=>{if(Snd.master)Snd.master.gain.value=0;},afterAd:()=>{if(Snd.master)Snd.master.gain.value=.7;},adBreakDone:go});
+  }};
+$('rAgain').onclick=()=>{if(S.mode==='multi')mpBackToLobby();else ApexAds.breakThen(resetRun);};$('rMenu').onclick=()=>quitToMenu();
 document.querySelectorAll('button').forEach(b=>b.addEventListener('mouseup',()=>b.blur()));
 
 

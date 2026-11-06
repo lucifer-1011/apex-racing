@@ -21,7 +21,9 @@ const FIN_STRAGGLER_MS = 120000; // after the first finisher, others get 2 minut
 const LOBBY_GRACE_MS = 45000;    // a dropped lobby player keeps their slot (and host role) this long so a phone app switch is harmless
 const IDLE_MS = 45000;           // clients ping every 4 s; silence this long means dead
 
-const ORIGIN_OK = /^(https:\/\/apex-racing[a-z0-9-]*\.vercel\.app|http:\/\/localhost(:\d+)?|http:\/\/127\.0\.0\.1(:\d+)?)$/;
+// Only the game's own sites may open a socket: the production alias, this team's deployment URLs (the team slug in the host cannot be
+// registered by anyone else) and local development. Browsers cannot fake Origin; scripts outside a browser can, so this is not authentication.
+const ORIGIN_OK = /^(https:\/\/apex-racing-seven\.vercel\.app|https:\/\/apex-racing(-[a-z0-9]+)*-piyush-pagares-projects\.vercel\.app|http:\/\/localhost(:\d+)?|http:\/\/127\.0\.0\.1(:\d+)?)$/;
 
 // Best-effort per-isolate limiter for new connections per IP.
 const hits = new Map();
@@ -46,7 +48,7 @@ export default {
       const stub = env.ROOM.get(env.ROOM.idFromName(m[1].toUpperCase()));
       return stub.fetch(req);
     }
-    return new Response('Apex Rider relay OK', { headers: { 'content-type': 'text/plain' } });
+    return new Response('Not found', { status: 404, headers: { 'content-type': 'text/plain' } });
   },
 };
 
@@ -255,6 +257,8 @@ export class Room {
     if (elapsed < minTime - 3) return;
     if (time < elapsed - 8 && time < elapsed * 0.8) return;
     if (p.prog < raceTotal(stage, laps) * 0.96) return;
+    // the reported time can never beat the time the relay itself saw (2 s allowed for network delay), so a client cannot claim a faster finish
+    time = Math.max(time, elapsed - 2);
     p.fin = Math.round(time * 100) / 100;
     this.finCount++;
     this.broadcast({ t: 'fin', i: p.id, time: p.fin, place: this.finCount });

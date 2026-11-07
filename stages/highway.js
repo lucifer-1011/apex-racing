@@ -459,6 +459,7 @@ function vehMats(kit){
   _liveryM=new T.MeshLambertMaterial({map:liveryTexture(kit),side:T.DoubleSide,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2});
 }
 function makeVehicle(kind,rng,kit){
+  {const AV=window.ApexVehicles;if(AV&&AV.ok()){const v=AV.map('highway',kind,rng,kit);if(v&&v.obj)return v;}} // detailed models (assets/vehicles/traffic.js); same rng use
   vehMats(kit);const T=kit.THREE,c1=rng(),c2=rng();
   const k=(kind==='van'&&c2<.5)?'van2':kind,V=vehGeo(k,kit);if(!V||!V.P)return null;
   let col=PAL[(c1*PAL.length)|0],col2=0xf1f1ee;

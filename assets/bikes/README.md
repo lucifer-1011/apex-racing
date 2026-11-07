@@ -118,3 +118,71 @@ python3 -I -B tools/build_adventure.py   # needs Python 3 and numpy; determinist
 
 Design reference (proportions and part layout only, its rider figure ignored): a grey sculpt of a Tiger-style adventure tourer
 supplied by the project owner. All geometry is our own.
+
+# 100 cc commuter (Skyline Highway)
+
+The Skyline Highway bike (`BIKES.sport`) is drawn as an **original procedural 100 cc commuter** by `tools/build_commuter.py` with
+the shared kit `tools/bikegeo.py`; no third party model is read or copied, and there is no licence to track. Upright commuter
+stance: fork-mounted headlamp visor with a rectangular headlight, twin round dials, round mirrors on black stalks, flat wide chrome
+bar; superellipse tank with a silver-grey lower panel and a white pin-stripe (skinned onto the curved tank), black panels under the
+tank, silver side covers with pin-stripes; long flat dual seat, black tail cowl with a red tail lamp, chrome rear carrier and grab
+rails, black rear mudguard with a blank plate and amber indicators; exposed forward-inclined single with square fins and light grey
+covers, full light grey chain case on the left, chrome crash guards, chrome header and long slim silencer with a heat shield on the
+right; twin chrome-spring rear shocks; silver five-spoke alloy wheels with thin tyres and drum brakes; black front fender. No logo,
+badge or text is drawn and both plates are blank.
+
+| File | What it is |
+|---|---|
+| `commuter.js` | `window.APEX_COMMUTER`: `hi` (desktop) and `lo` (touch) LODs, same packing and parts as `adventure.js`, plus anchors. **Generated, do not edit by hand.** |
+
+The game decodes it in `CommuterKit` (`packedKit()`) and builds it in `buildPacked()`. If it is missing or broken the Highway falls
+back to the Veloce RR superbike (`superbike.js`, rider pose `BIKES.sport.fitSuper`), then to the old procedural sport bike. Its
+livery is `BIKES.sport.cm` (gloss black / silver-grey / white, alt scheme dark blue), used by `makeMats` only with this model;
+the engine covers and chain case use the `plate` slot, fenders `carbon`. Wheelbase (1.42) and wheel radii (.30 / .31) are
+unchanged; the rider pose is `BIKES.sport.fit`.
+
+Triangles (bike without rider): `hi` 9,366 and `lo` 5,494 (rider about 4,000 more); 27 meshes, about 34 draw calls with the rider.
+
+```bash
+python3 -I -B tools/build_commuter.py    # needs Python 3 and numpy; deterministic
+```
+
+Design reference (proportions, part layout and colours only): four product photos of an Indian 100 cc commuter (right, front,
+left, rear) supplied by the project owner. The wheelbase is about 8 % longer than in the photos to keep the bike's physics values.
+All geometry is our own.
+
+# 450 enduro (Canyon Motocross)
+
+The Canyon Motocross bike (`BIKES.off`, Dune Raider 450) is drawn as an **original procedural 450 four-stroke enduro** by
+`tools/build_enduro.py` with the shared kit `tools/bikegeo.py`; no third party model is read or copied, and there is no licence to
+track. Tall long-travel stance: high orange front fender, orange headlight mask folded into a shallow V with a rectangular headlamp
+and small amber indicators, orange wrap-round hand guards on black spars, tapered bar on risers with grips, levers, master
+cylinders and cables; upside-down fork (silver outer tubes, gold inner tubes) with white fork guards and a navy line; orange
+radiator shrouds with white / navy graphics (plain colour blocks and angled stripes only), radiators with fins and hoses;
+silver-grey tank under the shrouds, small flat black seat, long tapered orange / white tail with a black plate holder, small red
+tail light and tiny indicators; orange frame and cradle, orange bash plate; four-stroke engine with clutch and ignition covers,
+ribbed cylinder, throttle body; silver header sweeping round the front of the engine and a silver canister high on the right;
+white swingarm, chain and sprockets, rear shock with a coil spring and reservoir; 18-spoke wheels with dark rims, silver hubs,
+nipples, wave discs and big knobby tyres; footpegs, brake pedal, gear lever and a folded chrome side stand. No logo, badge or text
+is drawn.
+
+| File | What it is |
+|---|---|
+| `enduro.js` | `window.APEX_ENDURO`: `hi` (desktop) and `lo` (touch) LODs, same packing and parts as `motocross.js`, plus anchors. **Generated, do not edit by hand.** |
+
+The game decodes it in `EnduroKit` (`packedKit()`, declared after `MxKit` so its config wins) and builds it in `buildPacked()`. If it
+is missing or broken the Canyon falls back to the Dune Raider motocross model (`motocross.js`), then to the old procedural bike.
+Livery is `BIKES.off` (orange / white / navy, alt scheme blue / white / black; the multiplayer colour replaces the orange); the
+motocross fallback now wears the same livery. Slots: `paint` orange plastics, frame and hand guards, `accent` white graphics,
+fork guards and swingarm, `trim` navy, `luggage` engine cases, `metal` alloy, tank and spokes, `head` / `tail` / `ind*` lamps.
+Wheelbase (1.48) and wheel radii (.40 / .36) are unchanged; the rider pose (ready stance on the pegs) is `BIKES.off.fit`, shared
+with the motocross fallback.
+
+Triangles (bike without rider): `hi` 10,978 and `lo` 5,574 (rider about 4,000 more); 28 meshes, 36 with the rider.
+
+```bash
+python3 -I -B tools/build_enduro.py      # needs Python 3 and numpy; deterministic
+```
+
+Design reference (proportions, part layout and colours only): four renders of an orange 450 enduro (front three-quarter, side,
+rear, front) supplied by the project owner. Its lettering is not reproduced. All geometry is our own.

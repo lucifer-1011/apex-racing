@@ -748,6 +748,7 @@ ApexKit.register('jungle',{
   },
   props(ctx){KIT=ctx.kit;STAT.calls=0;STAT.tris=0;WATERTEX=null;addProps(ctx);},
   vehicle(kind,rng,kit){KIT=kit;
+    {const AV=window.ApexVehicles;if(AV&&AV.ok()){const v=AV.map('jungle',kind,rng,kit);if(v&&v.obj)return v;}} // detailed models (assets/vehicles/traffic.js); same rng use
     switch(kind){case'logger':return logger(rng,kit);case'jeep':return jeep(rng,kit);case'pickup':return pickup(rng,kit);case'bus':return bus(rng,kit);case'cart':return cart(rng,kit);}
     return null;},
   obstacle(kind,rng,kit){KIT=kit;

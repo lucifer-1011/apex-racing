@@ -819,6 +819,7 @@
     for(const sx of[-1,1]){kit.box(g,kit.redL,.36,.16,.05,[sx*w,y,zb]);kit.box(g,kit.whiteL,.36,.16,.05,[sx*w,y,zf]);}
   }
   function vehicle(kind,rng,kit){
+    {const AV=window.ApexVehicles;if(AV&&AV.ok()){const v=AV.map('mountain',kind,rng,kit);if(v&&v.obj)return v;if(v&&v.rng)rng=v.rng;}} // detailed models (assets/vehicles/traffic.js); same rng use
     const g=new kit.THREE.Group(),vm=kit.vm,box=kit.box,cyl=kit.cyl,tyre=kit.tyreM,glass=kit.glassM;
     const wheel=(x,z,r,w,hub)=>kit.addWheel(g,x,r,z,r,w||.26,hub);
     let hw,hl;

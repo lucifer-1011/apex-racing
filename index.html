@@ -418,6 +418,9 @@ body.touch #board div{font-size:12px;padding:1px 6px}
 <script src="assets/bikes/superbike.js"></script>
 <script src="assets/bikes/motocross.js"></script>
 <script src="assets/bikes/adventure.js"></script>
+<script src="assets/bikes/enduro.js"></script>
+<script src="assets/bikes/commuter.js"></script>
+<script src="assets/vehicles/traffic.js"></script>
 <script>
 (function(){
 'use strict';
@@ -446,8 +449,12 @@ const BIKES={
   gears:6,idle:1300,red:13500,peakT:120,curve:[[0,.35],[.25,.55],[.5,.78],[.7,1],[.85,.97],[1,.82]],mass:285,R:.31,v1:20.8,vTop:82,cdA:.36,lean:.95,tyre:1.3,dirt:.7,brake:1.0,landLimit:9,aiAcc:9,cf:2,
   col1:0xf4f6fa,col2:0x1c69d4,col3:0xd8222a,alt:[0x16181d,0x00d1ff,0xffffff],suit:0x1c69d4,helmet:0xf4f6fa,stats:[95,90,40,100],
   cfg:{wb:1.42,Rf:.30,Rr:.31,tubeF:.062,tubeR:.075,tread:null,N:V(0,.86,.52),bar:{w:.3,y:.06,z:-.12},pivotZ:-.2,hip:V(0,.9,-.3),shoulder:V(0,1.2,.05),peg:[.23,.4,-.17],kneeUp:.14,kneeFwd:.16,headFwd:.08,seat:[.22,.05,.45,0,.82,-.2],engine:[.26,.34,.42,0,.48,0],tail:[0,.9,-.93],indF:[.2,.8,.78],indR:[.12,.9,-.9],eye:V(0,1.3,.25)},
-  // rider pose on the superbike model (assets/bikes/superbike.js); SuperKit merges it into cfg when the model loads
-  fit:{hip:V(0,.92,-.3),shoulder:V(0,1.1,.12),peg:[.22,.38,-.12],kneeUp:.12,kneeFwd:.14,headFwd:.06,eye:V(0,1.25,.24)}},
+  // upright rider pose on the commuter model (assets/bikes/commuter.js); CommuterKit merges it into cfg when the model loads
+  fit:{hip:V(0,.9,-.3),shoulder:V(0,1.4,-.17),peg:[.2,.27,-.12],kneeUp:.1,kneeFwd:.2,headFwd:.02,eye:V(0,1.63,-.22)},
+  // rider pose on the superbike model (assets/bikes/superbike.js, the fallback when commuter.js is missing); SuperKit merges it
+  fitSuper:{hip:V(0,.92,-.3),shoulder:V(0,1.1,.12),peg:[.22,.38,-.12],kneeUp:.12,kneeFwd:.14,headFwd:.06,eye:V(0,1.25,.24)},
+  // commuter livery (gloss black, silver-grey panels, white pin-stripe; alt: dark blue), used by makeMats only with the commuter model
+  cm:{col1:0x0c0d10,col2:0x9fa4ab,col3:0xf2f2f2,alt:[0x14295e,0x9fa4ab,0xf2f2f2]}},
  cruiser:{name:'Iron Stallion 1200',cls:'Retro roadster · Bonneville / Royal Enfield inspired',desc:'Heavy twin with torque everywhere. Leans until the footpegs scrape. Built for mountain sweepers.',
   gears:5,idle:900,red:6200,peakT:125,curve:[[0,.6],[.2,.85],[.5,1],[.75,.9],[1,.7]],mass:410,R:.34,v1:14.5,vTop:49,cdA:.65,lean:.58,tyre:1.0,dirt:.75,brake:.75,landLimit:8,aiAcc:5.5,cf:1,
   col1:0x6e1722,col2:0x111111,col3:0xc9a24a,alt:[0x1d3a2a,0xe8d9a8,0x111111],suit:0x3a2b20,helmet:0x151515,stats:[60,45,85,55],
@@ -456,16 +463,17 @@ const BIKES={
   fit:{hip:V(0,.92,-.46),shoulder:V(0,1.42,-.28),peg:[.2,.3,-.24],kneeUp:.12,kneeFwd:.2,headFwd:.02,eye:V(0,1.55,-.15)}},
  off:{name:'Dune Raider 450',cls:'Off-road · motocross',desc:'Featherweight with long-travel suspension. Soaks up jumps and whoops, grips loose dirt.',
   gears:6,idle:1700,red:11500,peakT:52,curve:[[0,.4],[.3,.65],[.55,.95],[.7,1],[.9,.9],[1,.7]],mass:190,R:.37,v1:11.5,vTop:41,cdA:.5,lean:.85,tyre:.9,dirt:1.25,brake:.85,landLimit:15,aiAcc:9,cf:.5,
-  col1:0xf4f4f4,col2:0xd8352a,col3:0x16171a,alt:[0xff6a13,0xffffff,0x111111],suit:0x1e2026,helmet:0xffffff,stats:[55,95,15,45],
+  col1:0xff6a13,col2:0xf4f4f4,col3:0x1b2238,alt:[0x1f5fd6,0xffffff,0x111111],suit:0x1e2026,helmet:0xffffff,stats:[55,95,15,45],
   cfg:{wb:1.48,Rf:.40,Rr:.36,tubeF:.07,tubeR:.08,tread:'knob',N:V(0,1.2,.55),bar:{w:.42,y:.2,z:-.1},pivotZ:-.2,hip:V(0,1.02,-.32),shoulder:V(0,1.52,-.12),peg:[.22,.4,-.1],kneeUp:.12,kneeFwd:.16,headFwd:.05,seat:[.13,.06,.7,0,.99,-.35],engine:[.24,.3,.36,0,.56,0],tail:[0,1.04,-1.02],indF:[.18,1.0,.62],indR:[.1,1.0,-1.0],eye:V(0,1.75,0)},
-  // rider pose on the motocross model (assets/bikes/motocross.js); MxKit merges it into cfg when the model loads
-  fit:{hip:V(0,1.1,-.22),shoulder:V(0,1.56,-.02),peg:[.205,.385,-.13],kneeUp:.12,kneeFwd:.16,headFwd:.05,eye:V(0,1.78,.14)}},
+  // rider pose (ready stance on the pegs) on the enduro model (assets/bikes/enduro.js) and its motocross fallback (motocross.js);
+  // EnduroKit / MxKit merge it into cfg when the model loads
+  fit:{hip:V(0,1.17,-.24),shoulder:V(0,1.6,.14),peg:[.205,.405,-.15],kneeUp:.13,kneeFwd:.2,headFwd:.06,eye:V(0,1.72,-.14)}},
  adv:{name:'Trail Master 1250',cls:'Adventure · Tiger inspired',desc:'Tall, comfortable all-rounder with luggage and a big triple. Handles mud, gravel and tarmac.',
   gears:6,idle:1100,red:8800,peakT:143,curve:[[0,.5],[.2,.78],[.45,1],[.7,.95],[1,.75]],mass:335,R:.36,v1:17.5,vTop:58,cdA:.62,lean:.78,tyre:1.1,dirt:1.0,brake:.9,landLimit:11,aiAcc:7,cf:1,
   col1:0x3f5a2e,col2:0xe8d9a8,col3:0xe8681f,alt:[0xe8d9a8,0x16171a,0xe8681f],suit:0x2a2d33,helmet:0xe8681f,stats:[75,70,65,75],
   cfg:{wb:1.6,Rf:.36,Rr:.36,tubeF:.075,tubeR:.09,tread:'knob',N:V(0,1.1,.6),bar:{w:.42,y:.2,z:-.1},pivotZ:-.22,hip:V(0,.96,-.3),shoulder:V(0,1.48,-.12),peg:[.25,.36,-.05],kneeUp:.1,kneeFwd:.2,headFwd:.03,seat:[.18,.07,.55,0,.93,-.25],engine:[.3,.3,.4,0,.5,.05],tail:[0,1.14,-1.03],indF:[.22,.9,.82],indR:[.3,.95,-.86],eye:V(0,1.7,.1)},
   // rider pose on the adventure model (assets/bikes/adventure.js); AdvKit merges it into cfg when the model loads
-  fit:{hip:V(0,1.05,-.22),shoulder:V(0,1.58,-.1),peg:[.215,.38,-.02],kneeUp:.1,kneeFwd:.2,headFwd:.03,eye:V(0,1.8,.04)}}
+  fit:{hip:V(0,1.05,-.22),shoulder:V(0,1.58,-.1),peg:[.215,.38,-.02],kneeUp:.1,kneeFwd:.2,headFwd:.03,eye:V(0,1.76,-.1)}}
 };
 for(const k in BIKES){const b=BIKES[k];b.ratios=[0];for(let i=1;i<=b.gears;i++){const vt=b.v1*Math.pow(b.vTop/b.v1,(i-1)/(b.gears-1));b.ratios.push(b.red*TAU*b.R/(60*vt));}}
 function curveAt(c,x){if(x<=c[0][0])return c[0][1];for(let i=1;i<c.length;i++)if(x<=c[i][0]){const t=(x-c[i-1][0])/(c[i][0]-c[i-1][0]);return lerp(c[i-1][1],c[i][1],t);}return c[c.length-1][1];}
@@ -774,7 +782,7 @@ const SuperKit=(()=>{
       parts=D.lod[lod].map(m=>({p:m.p,s:m.s,g:MotoKit.decode(m)}));
       const A=D.anchors,C=BIKES.sport.cfg,G=A.grip[0];
       // the visual config follows the model: wheelbase, wheel sizes, steering pivot and grips; the rider pose comes from BIKES.sport.fit
-      Object.assign(C,{wb:A.wb,Rf:A.Rf,Rr:A.Rr,N:V(...A.pivot),bar:{w:G[0],y:G[1]-A.pivot[1],z:G[2]-A.pivot[2]}},BIKES.sport.fit);
+      Object.assign(C,{wb:A.wb,Rf:A.Rf,Rr:A.Rr,N:V(...A.pivot),bar:{w:G[0],y:G[1]-A.pivot[1],z:G[2]-A.pivot[2]}},BIKES.sport.fitSuper);
       ok=true;
     }
   }catch(e){console.warn('Veloce RR model not usable, using the procedural sport bike',e);}
@@ -816,6 +824,12 @@ function packedKit(D,kind,label){
   return{ok:()=>ok,parts:()=>parts,A:()=>D.anchors,lod};
 }
 const MxKit=packedKit(window.APEX_MX,'off','Dune Raider'),AdvKit=packedKit(window.APEX_ADV,'adv','Trail Master');
+// The Canyon Motocross bike is drawn as the 450 enduro (assets/bikes/enduro.js, window.APEX_ENDURO, tools/build_enduro.py) when it
+// loads, else as the motocross model above (MxKit), else procedurally. Declared after MxKit so its cfg wins.
+const EnduroKit=packedKit(window.APEX_ENDURO,'off','Dune Raider enduro');
+// The Skyline Highway bike is drawn as a 100 cc commuter (assets/bikes/commuter.js, window.APEX_COMMUTER, tools/build_commuter.py)
+// when it loads, else as the Veloce RR superbike above (SuperKit), else procedurally. Declared after SuperKit so its cfg wins.
+const CommuterKit=packedKit(window.APEX_COMMUTER,'sport','Commuter');
 // Builds a packed model bike K into b (from buildBike), like buildSuper: the steer group hangs in a `head` group tilted to the
 // rake, so bars, forks, fender, lights and screen turn about the real steering axis; the front wheel is inside it, the rear on the body.
 function buildPacked(b,M,K){
@@ -833,12 +847,14 @@ function buildPacked(b,M,K){
   b.model=K.lod;
 }
 function buildBike(kind,o){
-  o=o||{};const S=BIKES[kind],C=S.cfg,M=makeMats(S,o);
+  o=o||{};const S=BIKES[kind],C=S.cfg,M=makeMats(kind==='sport'&&CommuterKit.ok()?{...S,...S.cm}:S,o);
   const root=new THREE.Object3D();root.rotation.order='YXZ';
   const body=new THREE.Group();root.add(body);const steer=new THREE.Group();body.add(steer);
   const b={root,body,steer,spec:S,M,heads:[],rider:new THREE.Group(),kind};
   if(kind==='cruiser'&&MotoKit.ok()){buildMoto(b,M);addRider(b,C);return b;}   // retro roadster model (falls back below if it did not load)
+  if(kind==='sport'&&CommuterKit.ok()){buildPacked(b,M,CommuterKit);addRider(b,C);return b;}   // commuter model (falls back to the superbike)
   if(kind==='sport'&&SuperKit.ok()){buildSuper(b,M);addRider(b,C);return b;}   // superbike model (falls back below if it did not load)
+  if(kind==='off'&&EnduroKit.ok()){buildPacked(b,M,EnduroKit);addRider(b,C);return b;}  // enduro model (falls back to the motocross model)
   if(kind==='off'&&MxKit.ok()){buildPacked(b,M,MxKit);addRider(b,C);return b;}  // motocross model (falls back below if it did not load)
   if(kind==='adv'&&AdvKit.ok()){buildPacked(b,M,AdvKit);addRider(b,C);return b;} // adventure model (falls back below if it did not load)
   const zr=-C.wb/2,zf=C.wb/2;
@@ -926,6 +942,7 @@ const WHEELS={im:null,n:0,HUB:0xc9ced6,
 };
 const _wM=new THREE.Matrix4(),_wS=new THREE.Vector3();
 function makeVehicle(kind,rng){
+  if(window.ApexVehicles&&ApexVehicles.ok()){const v=ApexVehicles.map('builtin',kind,rng,stageKit());if(v&&v.obj)return v;}  // detailed models (assets/vehicles/traffic.js); same rng use
   const g=new THREE.Group();const cols=[0xc92a2a,0x2a6fc9,0xdddddd,0x222222,0x3b8f4a,0xe0b030,0x888c94,0x7a3ec9];
   const col=cols[(rng()*cols.length)|0];let hw,hl;
   if(kind==='car'){hw=.92;hl=2.2;box(g,vm(col),1.8,.55,4.3,[0,.58,0]);box(g,glassM,1.6,.5,2.1,[0,1.1,-.2]);box(g,vm(col),1.55,.06,1.8,[0,1.38,-.2]);carWheels(g,.85,1.4,.33);
@@ -1498,6 +1515,7 @@ function stepPlayer(dt){
   const sf=surfaceInfo(),mu=Math.min(sf.mu,1.5);Pl.rough=sf.rough&&Pl.v>3;
   const crash=Pl.state==='crash';
   const fin=Pl.finished;
+  if(fin)Pl.v*=Math.exp(-dt*3.5);   // the race is over: the bike is brought to a stop within a few metres of the line, whatever its speed
   let thrT=0,fbT=0,rbT=0,steerIn=0,clutchHeld=false;
   const mpHold=S.mpMenu===true;
   if(!crash&&!fin&&!mpHold){thrT=held('throttle')?1:0;fbT=held('brakeF')?1:0;rbT=held('brakeR')?1:0;steerIn=(held('left')?1:0)-(held('right')?1:0);clutchHeld=held('clutch');}
@@ -1750,7 +1768,7 @@ function startGame(){
     try{
       const base=STAGES[S.stage],tk=TRAFFIC[curTraffic()].k*(TOUCH&&curTraffic()===2?1.18:1),st=todStage(Object.assign({},base,{laps:curLaps(),gap:[base.gap[0]*tk,base.gap[1]*tk]}));disposeWorld();buildWorld(st);
       const kind=st.bike;Pl.spec=BIKES[kind];Pl.bike=buildBike(kind);scene.add(Pl.bike.root);
-      Pl.bike.root.add(spot,spot.target);
+      Pl.bike.root.add(spot,spot.target);addDash(Pl.bike);Pl.bike.rider.visible=S.cam!==2;
       freshPlayer();resetRun();
       $('loading').classList.remove('on');$('hud').classList.add('on');document.body.classList.add('playing');
       buildMini();
@@ -1907,26 +1925,39 @@ document.querySelectorAll('#touch [data-k]').forEach(b=>{
 });
 const touchHelp='<div class="thelp"><b>Left thumb:</b> arrows lean and steer. <b>Right thumb:</b> double arrow = throttle, F disc = front brake, R disc = rear brake.<br><b>Bottom row:</b> power (engine), sun (light), horn, warning triangle (hazards), camera, reset to road, A/M (auto or manual gearbox), speaker (mute). Manual mode also shows the clutch lever and gear up/down arrows.<br><b>Tip:</b> for a bigger, full-screen view, add the game to your Home Screen from the browser share menu.</div>';
 /* ================= CAMERA ================= */
-const cam={hd:0,pos:new THREE.Vector3(),init:false},_cw=V(0,0,0),_cl=V(0,0,0);
+const cam={hd:0,pos:new THREE.Vector3(),init:false},_cw=V(0,0,0),_cl=V(0,0,0),_qRoot=new THREE.Quaternion(),_qBody=new THREE.Quaternion(),_qCam=new THREE.Quaternion(),_qDown=new THREE.Quaternion(),_qFlip=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),Math.PI),_eu=new THREE.Euler(),_ev=new THREE.Vector3(),_ax=new THREE.Vector3(1,0,0);
+/** True while the first-person camera (S.cam===2) is in use; a crash cuts to the chase view so the fall can be seen. */
+const povOn=()=>S.cam===2&&Pl.state!=='crash';
 function updateCamera(dt){
-  const b=Pl,fx=Math.sin(b.hd),fz=Math.cos(b.hd);
-  cam.hd+=angDiff(cam.hd,b.hd)*(1-Math.exp(-dt*(S.cam===2?18:5)));
+  const b=Pl,fx=Math.sin(b.hd),fz=Math.cos(b.hd),mode=povOn()?2:(S.cam===2?0:S.cam);
+  if(b.bike&&b.bike.rider)b.bike.rider.visible=mode!==2;
+  cam.hd+=angDiff(cam.hd,b.hd)*(1-Math.exp(-dt*(mode===2?18:5)));
   const cx=Math.sin(cam.hd),cz=Math.cos(cam.hd);
   const spd=sstep(0,80,Pl.v);const want=_cw.set(0,0,0),look=_cl.set(0,0,0);let roll=0;
   const px=b.x,py=b.y,pz=b.z;
-  if(S.cam===0){want.set(px-cx*(5.2+spd*1.6),py+2.0+spd*.3,pz-cz*(5.2+spd*1.6));look.set(px+cx*4,py+1.0,pz+cz*4);}
-  else if(S.cam===1){want.set(px-cx*3.2,py+1.25,pz-cz*3.2);look.set(px+cx*5,py+.9,pz+cz*5);}
-  else if(S.cam===2){const e=Pl.spec.cfg.eye,wx=px+fx*e.z,wz=pz+fz*e.z;want.set(wx,py+e.y,wz);look.set(wx+Math.sin(b.hd+b.steer*0)*30,py+e.y-.5+Math.sin(Pl.pitchG)*10,wz+Math.cos(b.hd)*30);roll=-b.lean*.45;}
+  if(mode===0){want.set(px-cx*(5.2+spd*1.6),py+2.0+spd*.3,pz-cz*(5.2+spd*1.6));look.set(px+cx*4,py+1.0,pz+cz*4);}
+  else if(mode===1){want.set(px-cx*3.2,py+1.25,pz-cz*3.2);look.set(px+cx*5,py+.9,pz+cz*5);}
+  else if(mode===2){
+    /* First person, mounted on the bike: the eye and the view are fixed to the bike's own frame (yaw, slope, throttle/brake pitch, wheelie and lean,
+       the same pivots as setPose), looking ~11 degrees down (17 on touch). So the cluster on the handlebars is always at the same place on the screen
+       and the bars, mirrors and cluster move together. Lean roll is followed 85%. */
+    const e=Pl.spec.cfg.eye,w=Pl.wheelie||0,p=Pl.pitchG+Pl.pitchD,qz=-Pl.spec.cfg.wb/2,ln=Pl.lean||0;
+    _qRoot.setFromEuler(_eu.set(-p,b.hd,-ln,'YXZ'));_qBody.setFromEuler(_eu.set(-w,0,0));
+    _ev.set(e.x||0,e.y,e.z).applyQuaternion(_qBody);_ev.y+=Math.sin(-w)*qz+(b.sOff||0);_ev.z+=qz*(1-Math.cos(-w));
+    _ev.applyQuaternion(_qRoot);want.set(px+_ev.x,py+_ev.y,pz+_ev.z);
+    _qRoot.setFromEuler(_eu.set(-p,b.hd,-ln*.85,'YXZ'));
+    _qCam.copy(_qRoot).multiply(_qBody).multiply(_qFlip).multiply(_qDown.setFromAxisAngle(_ax,-(TOUCH?.295:.19)));}
   else{const rx=-Math.cos(cam.hd),rz=Math.sin(cam.hd);want.set(px+rx*4.3-cx*1.5,py+1.1,pz+rz*4.3-cz*1.5);look.set(px,py+.8,pz);}
   // camera collision: if a cliff or hill is between the bike and the camera, pull the camera in so it never sits inside the terrain
-  if(S.cam!==2){const ty=py+1.2;let kk=1;for(let i=1;i<=8;i++){const t=i/8,x=px+(want.x-px)*t,z=pz+(want.z-pz)*t,y=ty+(want.y-ty)*t;if(terrainH(x,z)>y-.35){kk=(i-1)/8;break;}}
+  if(mode!==2){const ty=py+1.2;let kk=1;for(let i=1;i<=8;i++){const t=i/8,x=px+(want.x-px)*t,z=pz+(want.z-pz)*t,y=ty+(want.y-ty)*t;if(terrainH(x,z)>y-.35){kk=(i-1)/8;break;}}
     if(kk<1){want.x=px+(want.x-px)*kk;want.z=pz+(want.z-pz)*kk;want.y=ty+(want.y-ty)*kk;}}
-  if(!cam.init||S.cam===2){cam.pos.copy(want);cam.init=true;}else cam.pos.lerp(want,1-Math.exp(-dt*(S.cam===3?4:10)));
+  if(!cam.init||mode===2){cam.pos.copy(want);cam.init=true;}else cam.pos.lerp(want,1-Math.exp(-dt*(mode===3?4:10)));
   const gh=terrainH(cam.pos.x,cam.pos.z);if(cam.pos.y<Math.max(gh,groundH(cam.pos.x,cam.pos.z,-1))+.5)cam.pos.y=Math.max(gh,groundH(cam.pos.x,cam.pos.z,-1))+.5;
   camera.position.copy(cam.pos);
   if(Pl.rough||Pl.state==='crash'){camera.position.x+=(Math.random()-.5)*.02*clamp(Pl.v/25,0,2);camera.position.y+=(Math.random()-.5)*.02*clamp(Pl.v/25,0,2);}
-  camera.lookAt(look);if(roll)camera.rotateZ(roll);
-  const fov=60+24*spd+(S.cam===2?8:0);if(Math.abs(camera.fov-fov)>.1){camera.fov=fov;camera.updateProjectionMatrix();}
+  if(mode===2)camera.quaternion.copy(_qCam);else{camera.lookAt(look);if(roll)camera.rotateZ(roll);}
+  {const gv=mode===2?'hidden':'';if(_gaugeEl.style.visibility!==gv)_gaugeEl.style.visibility=gv;} // first person: the bike's own cluster replaces the corner gauge
+  const fov=60+24*spd+(mode===2?8:0);if(Math.abs(camera.fov-fov)>.1){camera.fov=fov;camera.updateProjectionMatrix();}
   sky.position.copy(camera.position);
   sunLight.position.set(Pl.x+ST.sun[1][0]*100,Pl.y+ST.sun[1][1]*100,Pl.z+ST.sun[1][2]*100);sunLight.target.position.set(Pl.x,Pl.y,Pl.z);
 }
@@ -2008,6 +2039,52 @@ function drawGauge(){
   g.textAlign='left';g.fillStyle='#8791a3';g.font='600 10px Rajdhani,sans-serif';g.fillText('CLUTCH',118,124);
   g.fillStyle='rgba(255,255,255,.12)';g.fillRect(160,117,66,7);g.fillStyle=Pl.clutch<.4?'#6fe3ff':'#3ddc84';g.fillRect(160,117,66*Pl.clutch,7);
   arrow(g,276,114,1,(Pl.indR||Pl.haz)&&blink);
+}
+/* First-person instrument cluster on the player's bike only, shown only in the first-person camera (S.cam===2).
+   One mesh and one draw call: a thin box whose rider-facing face carries a 256x128 canvas texture; its other faces
+   sample the dark housing colour. Redrawn at most ~15 Hz and only when what it shows changes.
+   DASH placement per bike, in the bike's body frame relative to the steering head: y up, z forward (m),
+   w width (m), tilt (rad; positive turns the face up toward the rider). */
+const DASH={sport:{y:.15,z:.14,w:.24,tilt:.7},cruiser:{y:.12,z:.08,w:.2,tilt:.7},off:{y:.17,z:.12,w:.2,tilt:.7},adv:{y:.27,z:.03,w:.19,tilt:.7}};
+const _dv=new THREE.Vector3();
+/** Adds the cluster mesh to bike b (child of b.steer, hidden until updateDash shows it); frees the previous one. */
+const _gaugeEl=document.getElementById('gauge');
+function addDash(b){
+  const d=DASH[b.kind],o=addDash;if(o.tex){o.tex.dispose();o.mat.dispose();o.geo.dispose();o.tex=null;}if(!d)return;
+  const cv=document.createElement('canvas');cv.width=256;cv.height=128;
+  const tex=new THREE.CanvasTexture(cv);tex.anisotropy=4;
+  const geo=new THREE.BoxGeometry(d.w,d.w/2,.025),uv=geo.attributes.uv;
+  for(let i=0;i<uv.count;i++)if(i<16||i>=20)uv.setXY(i,.004,.004);   // only the +z face (vertices 16-19) shows the dial
+  const mat=new THREE.MeshBasicMaterial({map:tex,fog:false,toneMapped:false}),m=new THREE.Mesh(geo,mat);m.visible=false;
+  b.root.updateMatrixWorld(true);b.root.worldToLocal(_dv.setFromMatrixPosition(b.steer.matrixWorld));
+  m.position.set(0,_dv.y+d.y,_dv.z+d.z);m.rotation.set(d.tilt,Math.PI,0);b.root.add(m);b.steer.attach(m);
+  o.tex=tex;o.mat=mat;o.geo=geo;b.dash={m,g:cv.getContext('2d'),tex,key:'',t:0};
+}
+/** Shows the cluster in the first-person camera and redraws its canvas when the readout changes. */
+function updateDash(now){
+  const d=Pl.bike&&Pl.bike.dash;if(!d)return;
+  d.m.visible=povOn();if(!d.m.visible||now-d.t<66)return;
+  const sp=Pl.spec,maxR=Math.ceil(sp.red*1.08/1000)*1000,N=24,lit=Math.round(clamp(Pl.rpm/maxR,0,1)*N),redI=Math.floor(sp.red/maxR*N),blink=(now%700)<350;
+  const L=(Pl.indL||Pl.haz)&&blink,R=(Pl.indR||Pl.haz)&&blink,kmh=S.units==='kmh',spd=Math.round(Pl.v*(kmh?3.6:2.23694)),odo=(Pl.odo/(kmh?1000:1609.34)).toFixed(1);
+  const key=spd+'|'+Pl.gear+'|'+Math.round(Pl.rpm/100)+'|'+L+R+Pl.light+Pl.engineOn+'|'+odo+kmh;
+  if(key===d.key)return;d.key=key;d.t=now;
+  const g=d.g;g.textBaseline='alphabetic';
+  g.fillStyle='#07090d';g.fillRect(0,0,256,128);
+  g.fillStyle='#0e131b';rr(g,4,4,248,120,12);g.fill();g.strokeStyle='rgba(255,255,255,.14)';g.lineWidth=1.5;g.stroke();
+  const bw=(232-(N-1)*2)/N;
+  for(let i=0;i<N;i++){g.fillStyle=i<lit?(i>=redI?'#ff3b3b':(i>redI-5?'#ffb020':'#ff5a1f')):'rgba(255,255,255,.1)';g.fillRect(12+i*(bw+2),12,bw,12);}
+  g.fillStyle='rgba(255,255,255,.5)';g.font='600 10px Rajdhani,sans-serif';g.textAlign='center';
+  for(let k=0;k*2000<=maxR;k++)g.fillText(String(k*2),12+Math.min(226,(k*2000/maxR)*232),36);
+  g.textAlign='left';g.fillStyle='#fff';g.font='700 58px Rajdhani,sans-serif';g.fillText(String(spd),12,88);
+  g.fillStyle='#ffb020';g.font='700 13px Rajdhani,sans-serif';g.fillText(kmh?'KM/H':'MPH',14,101);
+  g.fillStyle='#cfd6e3';g.font='600 16px Rajdhani,sans-serif';g.fillText((Pl.rpm/1000).toFixed(1)+' k rpm',106,60);
+  g.fillStyle='#8791a3';g.font='600 13px Rajdhani,sans-serif';g.fillText('ODO '+odo+(kmh?' km':' mi'),106,80);
+  const n=Pl.gear===0;g.strokeStyle=n?'#3ddc84':'rgba(255,255,255,.35)';g.lineWidth=2;rr(g,192,40,52,56,10);g.stroke();
+  g.textAlign='center';g.fillStyle=n?'#3ddc84':'#fff';g.font='700 44px Rajdhani,sans-serif';g.fillText(n?'N':String(Pl.gear),218,86);
+  const tri=(x,dir,on)=>{g.fillStyle=on?'#3ddc84':'rgba(255,255,255,.16)';g.beginPath();g.moveTo(x+(dir<0?14:0),104);g.lineTo(x+(dir<0?0:14),112);g.lineTo(x+(dir<0?14:0),120);g.closePath();g.fill();};
+  const lamp=(x,w,t,on,c)=>{g.strokeStyle=on?c:'rgba(255,255,255,.16)';g.lineWidth=1.5;rr(g,x,103,w,18,6);g.stroke();g.fillStyle=on?c:'rgba(255,255,255,.3)';g.font='700 13px Rajdhani,sans-serif';g.fillText(t,x+w/2,117);};
+  tri(12,-1,L);lamp(36,44,'ENG',Pl.engineOn,'#3ddc84');lamp(86,56,'LIGHT',Pl.light,'#6fe3ff');tri(230,1,R);
+  d.tex.needsUpdate=true;
 }
 const tAuto=$('tAuto'),tCl=$('tCl'),tGu=$('tGu'),tGd=$('tGd'),tHaz=$('tHaz'),tLamp=$('tLamp'),tIgn=$('tIgn');
 function updateTouchHUD(){
@@ -2277,7 +2354,7 @@ function mpUpdateRemotes(dt){
   }
 }
 function mpStandings(){
-  const list=[{id:MP.id,name:MP.name||'You',color:(MP.players.find(q=>q.id===MP.id)||{color:0}).color,prog:Pl.prog,fin:MP.finMap[MP.id],me:true}];
+  const list=[{id:MP.id,name:MP.name||'You',color:(MP.players.find(q=>q.id===MP.id)||{color:0}).color,prog:Pl.prog,fin:MP.finMap[MP.id]!=null?MP.finMap[MP.id]:(Pl.finished?S.total:undefined),me:true}];   // own finish shows at once, before the relay echoes it
   for(const q of MP.players){if(q.id===MP.id)continue;const r=MP.remotes.get(q.id);list.push({id:q.id,name:q.name,color:q.color,prog:r?r.prog:0,fin:MP.finMap[q.id],on:q.on&&!(r&&r.lost)});}
   list.sort((a,b)=>(a.fin!=null&&b.fin!=null)?a.fin-b.fin:(a.fin!=null?-1:(b.fin!=null?1:b.prog-a.prog)));
   return list;
@@ -2354,7 +2431,7 @@ function frame(now){
     if(S.mode==='multi'){mpUpdateRemotes(dt);mpSendPose(now);}
     updateGantries(now);
     for(let i=0;i<UPD.length;i++){try{UPD[i](dt,now);}catch(err){console.warn('[map module] updater removed:',err);UPD.splice(i--,1);}}
-    updateCamera(dt);
+    updateCamera(dt);updateDash(now);
     updateHUD();
   }
   renderer.render(scene,camera);

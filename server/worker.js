@@ -23,7 +23,7 @@ const IDLE_MS = 45000;           // clients ping every 4 s; silence this long me
 
 // Only the game's own sites may open a socket: the production alias, this team's deployment URLs (the team slug in the host cannot be
 // registered by anyone else) and local development. Browsers cannot fake Origin; scripts outside a browser can, so this is not authentication.
-const ORIGIN_OK = /^(https:\/\/apex-racing-seven\.vercel\.app|https:\/\/apex-racing(-[a-z0-9]+)*-piyush-pagares-projects\.vercel\.app|http:\/\/localhost(:\d+)?|http:\/\/127\.0\.0\.1(:\d+)?)$/;
+const ORIGIN_OK = /^(https:\/\/apex-racing-seven\.vercel\.app|https:\/\/jasola-rider\.vercel\.app|https:\/\/apex-racing(-[a-z0-9]+)*-piyush-pagares-projects\.vercel\.app|http:\/\/localhost(:\d+)?|http:\/\/127\.0\.0\.1(:\d+)?)$/;
 
 // Best-effort per-isolate limiter for new connections per IP.
 const hits = new Map();

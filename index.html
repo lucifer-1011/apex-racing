@@ -421,6 +421,7 @@ body.touch #board div{font-size:12px;padding:1px 6px}
 <script src="assets/bikes/enduro.js"></script>
 <script src="assets/bikes/commuter.js"></script>
 <script src="assets/vehicles/traffic.js"></script>
+<script src="assets/riders.js"></script>
 <script>
 (function(){
 'use strict';
@@ -551,7 +552,7 @@ function rod(par,m,a,b,r){const d=b.clone().sub(a),len=d.length();const o=mesh(g
 function fender(par,m,R,arc,pos,tube,wide){const g=new THREE.Group();g.add(mesh(geo('TorusGeometry',R,tube,5,20,arc),m,null,[0,0,PI/2-arc/2],[1,1,wide]));g.rotation.y=PI/2;g.position.set(pos[0],pos[1],pos[2]);par.add(g);return g;}
 
 function makeMats(S,o){
-  if(o.ghost){const g=new THREE.MeshBasicMaterial({color:0x8fe6ff,transparent:true,opacity:.38,depthWrite:false});return{carbon:g,paint:g,accent:g,trim:g,dark:g,chrome:g,tire:g,glass:g,seat:g,suit:g,helmet:g,visor:g,glove:g,boot:g,tail:g,head:g,gold:g,hivis:g,luggage:g,metal:g,plate:g,ind:[g,g,g,g]};}
+  if(o.ghost){const g=new THREE.MeshBasicMaterial({color:0x8fe6ff,transparent:true,opacity:.38,depthWrite:false});return{carbon:g,paint:g,accent:g,trim:g,dark:g,chrome:g,tire:g,glass:g,seat:g,suit:g,helmet:g,visor:g,glove:g,boot:g,skin:g,denim:g,rtrim:g,tail:g,head:g,gold:g,hivis:g,luggage:g,metal:g,plate:g,ind:[g,g,g,g]};}
   const c=o.color!==undefined?[o.color,S.col2,S.col3]:(o.alt?S.alt:[S.col1,S.col2,S.col3]);
   const st=(col,r,m)=>new THREE.MeshStandardMaterial({color:col,roughness:r,metalness:m});
   return{carbon:st(0x0e1014,.34,.5),paint:st(c[0],.28,.35),accent:st(c[1],.35,.25),trim:st(c[2],.35,.25),dark:st(0x15171b,.6,.3),
@@ -559,7 +560,8 @@ function makeMats(S,o){
    glass:new THREE.MeshStandardMaterial({color:0x223344,transparent:true,opacity:.45,roughness:.1}),seat:st(0x1a1a1a,.85,0),
    suit:st(o.alt?0x222222:S.suit,.6,.05),helmet:st(o.color!==undefined?o.color:(o.alt?0x00d1ff:S.helmet),.25,.2),gold:st(0xd7a83a,.35,.6),hivis:st(0xf2d21a,.45,.1),   // hivis: yellow fork-guard stripes (motocross model)
    luggage:st(0x4b5057,.7,.2),   // luggage: dark grey cases (adventure model)
-   visor:new THREE.MeshStandardMaterial({color:0x0b0e14,roughness:.1,metalness:.7,envMapIntensity:1.4}),glove:st(0x17191e,.55,.1),boot:st(0x1b1d22,.6,.12),
+   visor:new THREE.MeshStandardMaterial({color:0x0a121b,roughness:.12,metalness:.45,envMapIntensity:.8}),glove:st(0x17191e,.55,.1),boot:st(0x1b1d22,.6,.12),skin:st(0xc48a63,.8,0),denim:st(0x2b3a55,.88,0),rtrim:st(0xf2f4f8,.5,.05),   // rider: skin, jeans, white stripes
+   
    metal:st(0xa7acb3,.34,.85),plate:st(0xa39c88,.7,0),           // brushed alloy and number plate (Iron Stallion model)
    tail:new THREE.MeshBasicMaterial({color:0x5a1010}),head:new THREE.MeshBasicMaterial({color:0xcfc7a0}),
    ind:[0,1,2,3].map(()=>new THREE.MeshBasicMaterial({color:0x4a3200}))};
@@ -583,44 +585,115 @@ function limb(par,m,a,b,ra,rb,seg){
   o.position.copy(a).addScaledVector(d,.5);o.quaternion.setFromUnitVectors(V(0,1,0),d.normalize());par.add(o);return o;
 }
 function blob(par,m,p,rx,ry,rz,along){
-  const o=mesh(geo('SphereGeometry',1,12,8),m,p.toArray?p.toArray():p,null,[rx,ry,rz]);
+  const o=mesh(TOUCH?geo('SphereGeometry',1,8,6):geo('SphereGeometry',1,12,8),m,p.toArray?p.toArray():p,null,[rx,ry,rz]);
   if(along)o.quaternion.setFromUnitVectors(V(0,1,0),along);par.add(o);return o;
 }
-// The rider is a static pose built to the bike's config (hip, shoulder, grips, pegs, knee bend, head position): pelvis, belly and chest,
-// shoulder pads, tapered arms with cuffed gloves, thighs and shins with knee pads, boots, neck and a helmet with a glossy visor.
-// All the pieces are merged into one mesh per material at the end, so a rider costs about 7 draw calls whatever its detail.
-function addRider(b,C){
-  const M=b.M,R=b.rider;b.body.add(R);
-  const hip=C.hip,sh=C.shoulder,dir=sh.clone().sub(hip).normalize(),L=sh.distanceTo(hip);
-  blob(R,M.suit,hip,.16,.11,.15);
-  limb(R,M.suit,hip.clone().addScaledVector(dir,.04),hip.clone().addScaledVector(dir,L*.6),.125,.14,12);
-  blob(R,M.suit,hip.clone().addScaledVector(dir,L*.8),.19,.17,.14,dir);
-  for(const sx of[-1,1]){
-    const shoulder=sh.clone().add(V(sx*.17,0,0));
-    const grip=C.N.clone().add(V(sx*C.bar.w,C.bar.y,C.bar.z));
-    const elbow=shoulder.clone().lerp(grip,.5).add(V(sx*.1,-.05,0));
-    const fdir=grip.clone().sub(elbow).normalize(),wrist=grip.clone().addScaledVector(fdir,-.07);
-    blob(R,M.suit,shoulder,.07,.07,.07);blob(R,M.accent,shoulder.clone().add(V(sx*.01,.035,0)),.075,.045,.075);
-    limb(R,M.suit,shoulder,elbow,.055,.045,10);blob(R,M.suit,elbow,.048,.048,.048);
-    limb(R,M.suit,elbow,wrist,.045,.035,10);limb(R,M.accent,wrist.clone().addScaledVector(fdir,-.04),wrist.clone().addScaledVector(fdir,.02),.044,.044,10);
-    blob(R,M.glove,grip,.05,.045,.06);
-    const hp=hip.clone().add(V(sx*.1,0,0)),foot=V(sx*C.peg[0],C.peg[1],C.peg[2]);
-    const knee=hp.clone().lerp(foot,.5).add(V(sx*.07,C.kneeUp,C.kneeFwd)),ankle=foot.clone().add(V(0,.1,-.04));
-    limb(R,M.suit,hp,knee,.09,.066,12);blob(R,M.suit,knee,.07,.07,.07);blob(R,M.accent,knee.clone().add(V(sx*.05,0,.01)),.022,.05,.05);
-    limb(R,M.suit,knee,ankle,.064,.048,10);
-    limb(R,M.boot,foot.clone().add(V(0,.03,0)),ankle.clone().add(V(0,.06,0)),.056,.056,10);
-    blob(R,M.boot,foot.clone().add(V(0,.035,.06)),.055,.055,.12);box(R,M.dark,.1,.03,.27,[foot.x,foot.y-.02,foot.z+.07]);
+// The rider is a static pose built to the bike's config (hip, shoulder, grips, pegs, knee bend, head position). Each bike gets its own
+// kit: a leather race suit with a back hump and full-face helmet (superbike), a leather jacket, jeans and an open-face helmet with a
+// visible face (cruiser), a jersey, pants, tall buckled boots and goggles (motocross), and a padded jacket with an adventure helmet.
+// Bodies are lofted tubes with elliptical sections (torso, arms, thighs, shins, boots) plus a few shaped pieces; everything is merged
+// into one mesh per material at the end, so a rider costs about 10 draw calls whatever its detail (about half the triangles on phones).
+function tube(par,m,st,seg){
+  const n=st.length,ring=seg||12,pos=[],idx=[],T=V(0,0,0),S=V(0,0,0),N=V(0,0,0);
+  for(let i=0;i<n;i++){
+    T.copy(st[Math.min(n-1,i+1)].p).sub(st[Math.max(0,i-1)].p).normalize();
+    S.set(1,0,0).addScaledVector(T,-T.x);if(S.lengthSq()<1e-6)S.set(0,0,1);S.normalize();N.crossVectors(T,S);
+    for(let k=0;k<ring;k++){const a=k/ring*TAU,c=Math.cos(a)*st[i].rx,s=Math.sin(a)*st[i].rz;
+      pos.push(st[i].p.x+S.x*c+N.x*s,st[i].p.y+S.y*c+N.y*s,st[i].p.z+S.z*c+N.z*s);}
   }
+  for(let i=0;i<n-1;i++)for(let k=0;k<ring;k++){const a=i*ring+k,b=i*ring+(k+1)%ring,c=(i+1)*ring+k,d=(i+1)*ring+(k+1)%ring;idx.push(a,b,c,b,d,c);}
+  for(const end of[0,1]){const i=end?n-1:0,ci=pos.length/3;pos.push(st[i].p.x,st[i].p.y,st[i].p.z);
+    for(let k=0;k<ring;k++){const a=i*ring+k,b=i*ring+(k+1)%ring;if(end)idx.push(ci,b,a);else idx.push(ci,a,b);}}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));g.setIndex(idx);g.computeVertexNormals();
+  const o=new THREE.Mesh(g,m);o.castShadow=true;par.add(o);return o;
+}
+const rs=(p,rx,rz)=>({p,rx,rz:rz===undefined?rx:rz});
+// Sculpted riders (assets/riders.js, window.APEX_RIDERS, made by tools/build_riders.py): a seamless body baked into each bike's pose, one mesh per
+// material slot. Used only when the bike's pose still matches the one baked into the file; otherwise addRider builds the procedural rider below.
+const RiderKit=(()=>{
+  const D=window.APEX_RIDERS,lod=TOUCH?'lo':'hi',cache={},near=(a,b)=>Math.abs(a-b)<.003;
+  function get(style,C){
+    if(!D||!D.riders||!D.riders[style]||!D.poses||!D.poses[style])return null;
+    const P=D.poses[style];
+    if(!(near(P.hip[1],C.hip.y)&&near(P.hip[2],C.hip.z)&&near(P.sh[1],C.shoulder.y)&&near(P.sh[2],C.shoulder.z)&&near(P.N[1],C.N.y)&&near(P.N[2],C.N.z)&&
+      near(P.bar.w,C.bar.w)&&near(P.bar.y,C.bar.y)&&near(P.bar.z,C.bar.z)&&near(P.peg[0],C.peg[0])&&near(P.peg[1],C.peg[1])&&near(P.peg[2],C.peg[2])&&near(P.headFwd,C.headFwd)))return null;
+    try{if(!cache[style])cache[style]=D.riders[style][lod].map(m=>({s:m.s,g:MotoKit.decode(m)}));return cache[style];}
+    catch(e){console.warn('sculpted rider not usable, using the procedural rider',e);return null;}
+  }
+  return{get};
+})();
+function addRider(b,C,style){
+  const M=b.M,R=b.rider,kind=style||b.kind,SEG=TOUCH?8:14;b.body.add(R);
+  const hip=C.hip,sh=C.shoulder,dir=sh.clone().sub(hip).normalize(),L=sh.distanceTo(hip),at=t=>hip.clone().addScaledVector(dir,L*t);
+  // per-bike kit: pri = jacket / jersey / suit, sec = legs, trim = stripes, kw/kd = body bulk
+  const K={commuter:{pri:M.suit,sec:M.denim,trim:M.rtrim,kw:1,kd:1,boot:.1},sport:{pri:M.suit,sec:M.suit,trim:M.rtrim,kw:.97,kd:.95,boot:.2},cruiser:{pri:M.suit,sec:M.denim,trim:M.dark,kw:1.04,kd:1.04,boot:.12},
+    off:{pri:M.paint,sec:M.suit,trim:M.rtrim,kw:1,kd:1,boot:.3},adv:{pri:M.suit,sec:M.suit,trim:M.trim,kw:1.1,kd:1.12,boot:.2}}[kind]||{pri:M.suit,sec:M.suit,trim:M.accent,kw:1,kd:1,boot:.2};
+  const kw=K.kw,kd=K.kd,SC=RiderKit.get(kind,C);
+  if(SC){const SM={pri:K.pri,sec:K.sec,trim:K.trim,glove:M.glove,boot:M.boot,skin:M.skin,helm:M.helmet};for(const m of SC){const o=new THREE.Mesh(m.g,SM[m.s]);o.castShadow=true;R.add(o);}}
+  // torso: pelvis, waist, chest and shoulder line as one lofted body
+  if(!SC)tube(R,K.pri,[rs(at(-.03),.16*kw,.115*kd),rs(at(.12),.17*kw,.12*kd),rs(at(.4),.15*kw,.105*kd),rs(at(.68),.18*kw,.128*kd),rs(at(.92),.2*kw,.105*kd),rs(at(1.03),.11*kw,.07*kd)],SEG);
+  if(kind==='sport'&&!SC){blob(R,K.pri,at(.9).add(V(0,.04,-.085)),.14,.09,.12);blob(R,M.rtrim,at(.78).add(V(0,0,-.105)),.02,.2,.03,dir);}   // aero hump and back stripe
+  if(kind==='adv'||kind==='cruiser'){tube(R,M.dark,[rs(at(.1),.178*kw,.126*kd),rs(at(.19),.176*kw,.124*kd)],SEG);}   // belt
+  // neck and collar
   const head=sh.clone().addScaledVector(dir,.19).add(V(0,.02,C.headFwd));
-  limb(R,M.suit,sh,head.clone().add(V(0,-.07,-.02)),.06,.05,10);
+  if(!SC)tube(R,kind==='cruiser'?M.skin:K.pri,[rs(sh.clone().addScaledVector(dir,.0),.07,.065),rs(head.clone().add(V(0,-.09,-.015)),.052,.05)],SEG);
+  if(!SC)tube(R,K.pri,[rs(sh.clone().addScaledVector(dir,.03),.085,.08),rs(sh.clone().addScaledVector(dir,.1),.07,.066)],SEG);
+  for(const sx of[-1,1]){
+    // arm: shoulder, upper arm, elbow, forearm, wrist, glove
+    const shoulder=sh.clone().add(V(sx*.18*kw,-.01,0)),grip=C.N.clone().add(V(sx*C.bar.w,C.bar.y,C.bar.z));
+    const elbow=shoulder.clone().lerp(grip,.5).add(V(sx*.1,-.05,0)),fdir=grip.clone().sub(elbow).normalize(),wrist=grip.clone().addScaledVector(fdir,-.07);
+    if(!SC)blob(R,K.pri,shoulder,.075*kw,.075*kw,.075*kw);
+    if(kind==='sport'||kind==='off')blob(R,M.dark,shoulder.clone().add(V(sx*.02,.045,0)),.062,.034,.062);   // shoulder armour
+    if(kind==='adv')blob(R,K.trim,shoulder.clone().add(V(sx*.015,.04,0)),.07,.036,.07);
+    if(!SC)tube(R,K.pri,[rs(shoulder,.07*kw),rs(shoulder.clone().lerp(elbow,.5),.06*kw),rs(elbow,.05*kw),rs(elbow.clone().lerp(wrist,.5),.05*kw),rs(wrist,.037)],SEG);
+    blob(R,M.dark,elbow.clone().add(V(sx*.02,.02,-.02)),.042,.042,.042);             // elbow guard
+    if(kind==='sport'||kind==='adv')tube(R,K.trim,[rs(shoulder.clone().add(V(sx*.07*kw,.02,0)),.012),rs(shoulder.clone().lerp(elbow,.5).add(V(sx*.06*kw,.01,0)),.012),rs(elbow.clone().add(V(sx*.05*kw,.01,0)),.012)],6);
+    if(!SC)tube(R,M.glove,[rs(wrist.clone().addScaledVector(fdir,-.045),.046),rs(wrist.clone().addScaledVector(fdir,.01),.05)],SEG);    // gauntlet cuff
+    if(!SC){blob(R,M.glove,grip.clone().add(V(0,.005,-.02)),.043,.04,.06);                                   // palm
+    blob(R,M.glove,grip.clone().add(V(-sx*.012,-.03,.035)),.036,.03,.04);blob(R,M.glove,grip.clone().add(V(sx*.02,-.012,.045)),.025,.025,.03);}   // fingers and thumb
+    if(kind==='sport')blob(R,M.dark,grip.clone().add(V(0,.04,.0)),.04,.015,.05);                     // knuckle guard
+    // leg: thigh, knee, shin, boot
+    const hp=hip.clone().add(V(sx*.1,0,0)),foot=V(sx*C.peg[0],C.peg[1],C.peg[2]),knee=hp.clone().lerp(foot,.5).add(V(sx*.07,C.kneeUp,C.kneeFwd)),ankle=foot.clone().add(V(0,.1,-.04));
+    if(!SC){tube(R,K.sec,[rs(hp.clone().addScaledVector(dir,.02),.098*kw,.092*kd),rs(hp.clone().lerp(knee,.35),.092,.088),rs(hp.clone().lerp(knee,.75),.075,.072),rs(knee,.066)],SEG);
+    blob(R,K.sec,knee,.072,.072,.075);
+    tube(R,K.sec,[rs(knee,.064),rs(knee.clone().lerp(ankle,.35),.064,.068),rs(knee.clone().lerp(ankle,.8),.05),rs(ankle.clone().add(V(0,.02,0)),.046)],SEG);}
+    if(kind==='sport'){blob(R,M.dark,knee.clone().add(V(sx*.06,0,.015)),.024,.048,.05);blob(R,M.rtrim,knee.clone().add(V(sx*.075,0,.015)),.012,.03,.03);
+      tube(R,M.rtrim,[rs(hp.clone().lerp(knee,.2).add(V(sx*.095,0,0)),.012),rs(hp.clone().lerp(knee,.8).add(V(sx*.075,0,0)),.012)],6);}
+    if(kind==='off'||kind==='adv')blob(R,M.dark,knee.clone().add(V(sx*.02,.0,.045)),.06,.075,.04);        // knee guard
+    const top=ankle.clone().add(V(0,K.boot,0));
+    if(!SC)tube(R,M.boot,[rs(top,.066,.07),rs(ankle.clone().add(V(0,.04,0)),.062,.066),rs(ankle.clone().add(V(0,-.04,0)),.06,.066)],SEG);
+    if(kind==='sport')blob(R,M.rtrim,ankle.clone().add(V(sx*.05,.08,0)),.012,.08,.03,V(0,1,0));
+    if(kind==='off')for(const u of[.34,.62,.88])box(R,M.chrome,.012,.016,.07,[ankle.x+sx*.066,ankle.y+K.boot*u,ankle.z+.02]);   // boot buckles
+    if(!SC)blob(R,M.boot,foot.clone().add(V(0,.05,.07)),.055,.05,.125);                                    // toe box
+    box(R,M.dark,.1,.025,.28,[foot.x,foot.y-.01,foot.z+.07]);box(R,M.dark,.095,.04,.07,[foot.x,foot.y+.005,foot.z-.07]);   // sole and heel
+  }
+  // helmet
   const H=b.helmet=new THREE.Group();H.position.copy(head);R.add(H);
-  blob(H,M.helmet,V(0,0,0),.125,.13,.15);
-  // glossy visor: a band of a slightly bigger sphere over the face; chin bar below it
-  const vis=mesh(geo('SphereGeometry',1,14,8,PI/2-.95,1.9,1.2,.62),M.visor,null,null,[.129,.134,.154]);H.add(vis);
-  blob(H,M.helmet,V(0,-.1,.075),.085,.06,.095);
-  blob(H,M.accent,V(0,.1,-.01),.02,.05,.15);                              // racing stripe over the crown
-  if(b.kind==='off'){box(H,M.helmet,.2,.015,.13,[0,.075,.15],[-.3,0,0]);}   // motocross peak
-  if(b.kind==='sport'){blob(H,M.helmet,V(0,.04,-.15),.07,.05,.06);}        // rear spoiler bump
+  const sphH=geo('SphereGeometry',1,TOUCH?10:20,TOUCH?7:14),shell=(m,p,rx,ry,rz)=>{const o=mesh(sphH,m,p.toArray(),null,[rx,ry,rz]);H.add(o);return o;};
+  if(kind==='cruiser'){
+    // open-face retro helmet: a half shell with a brim, a visible face with sunglasses, and a chin strap
+    if(!SC){const cap=mesh(geo('SphereGeometry',1,TOUCH?10:18,TOUCH?6:10,0,TAU,0,1.85),M.helmet,[0,.01,-.005],null,[.13,.125,.155]);H.add(cap);
+    blob(H,M.skin,V(0,-.045,.07),.1,.115,.1);blob(H,M.skin,V(0,-.06,.165),.022,.03,.03);blob(H,M.skin,V(0,-.125,.095),.065,.05,.07);}   // dome, face, nose, chin
+    blob(H,M.dark,V(0,.005,.135),.108,.022,.035);for(const sx of[-1,1])blob(H,M.dark,V(sx*.05,.003,.145),.04,.032,.012);              // sunglasses
+    blob(H,M.dark,V(0,-.085,.15),.05,.012,.02);                                                                                  // moustache
+    tube(H,M.dark,[rs(V(-.12,-.02,.02),.008),rs(V(-.1,-.1,.07),.008)],6);tube(H,M.dark,[rs(V(.12,-.02,.02),.008),rs(V(.1,-.1,.07),.008)],6);
+    const rim=mesh(geo('TorusGeometry',.128,.008,6,TOUCH?12:24),M.chrome,[0,-.02,.0],[PI/2,0,0],[1,1.2,1]);H.add(rim);
+  }else{
+    if(!SC){shell(M.helmet,V(0,0,-.01),.126,.134,.166);blob(H,M.helmet,V(0,-.088,.062),.094,.07,.105);}   // shell and chin bar
+    blob(H,M.dark,V(0,-.112,.15),.04,.013,.014);                                                   // chin vent
+    if(kind==='off'){
+      const gz=.15;blob(H,M.dark,V(0,.025,gz),.108,.062,.05);blob(H,M.visor,V(0,.025,gz+.025),.092,.046,.03);   // goggles: frame and lens
+      const strap=mesh(geo('TorusGeometry',.131,.01,6,TOUCH?12:24),M.rtrim,[0,.025,-.01],[PI/2,0,0],[1,1.2,1]);H.add(strap);
+      box(H,M.helmet,.21,.014,.15,[0,.088,.14],[-.3,0,0]);if(!SC)blob(H,M.helmet,V(0,-.1,.1),.08,.058,.12);          // peak, long chin bar
+    }else{
+      // face shield: a dark surround and a glossy glass window that follow the shell
+      const seg=TOUCH?[10,5]:[18,8],sc=(k)=>[.126*k,.134*k,.166*k];
+      const sur=mesh(geo('SphereGeometry',1,seg[0],seg[1],PI/2-.92,1.84,1.2,.6),M.dark,[0,0,-.01],null,sc(1.012));H.add(sur);
+      const vis=mesh(geo('SphereGeometry',1,seg[0],seg[1],PI/2-.8,1.6,1.26,.46),M.visor,[0,0,-.01],null,sc(1.03));H.add(vis);
+      if(kind==='sport'||kind==='commuter'){if(kind==='sport'){blob(H,M.helmet,V(0,.035,-.155),.055,.03,.05);}for(const sx of[-1,1])blob(H,M.dark,V(sx*.035,.128,.0),.012,.008,.045);}   // rear spoiler, top vents
+      if(kind==='adv'){box(H,M.helmet,.17,.014,.1,[0,.095,.12],[-.22,0,0]);if(!SC)blob(H,M.helmet,V(0,-.1,.1),.075,.055,.09);}   // peak and big chin bar
+    }
+  }
   mergeByMaterial(R);mergeByMaterial(H);
 }
 const EXTRA={
@@ -852,7 +925,7 @@ function buildBike(kind,o){
   const body=new THREE.Group();root.add(body);const steer=new THREE.Group();body.add(steer);
   const b={root,body,steer,spec:S,M,heads:[],rider:new THREE.Group(),kind};
   if(kind==='cruiser'&&MotoKit.ok()){buildMoto(b,M);addRider(b,C);return b;}   // retro roadster model (falls back below if it did not load)
-  if(kind==='sport'&&CommuterKit.ok()){buildPacked(b,M,CommuterKit);addRider(b,C);return b;}   // commuter model (falls back to the superbike)
+  if(kind==='sport'&&CommuterKit.ok()){buildPacked(b,M,CommuterKit);addRider(b,C,'commuter');return b;}   // commuter model (falls back to the superbike)
   if(kind==='sport'&&SuperKit.ok()){buildSuper(b,M);addRider(b,C);return b;}   // superbike model (falls back below if it did not load)
   if(kind==='off'&&EnduroKit.ok()){buildPacked(b,M,EnduroKit);addRider(b,C);return b;}  // enduro model (falls back to the motocross model)
   if(kind==='off'&&MxKit.ok()){buildPacked(b,M,MxKit);addRider(b,C);return b;}  // motocross model (falls back below if it did not load)
